@@ -1,0 +1,55 @@
+---
+title: "Lek_2_opg_3_ISLR"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+
+
+
+```{r}
+
+data <- tibble(X_1 = c(1,1,0,5,6,4), X_2 = c(4,3,4,1,2,0))
+
+plot(data)
+samp <- sample(c(1,2), 6, replace = T)
+data[samp==1, "grp"] <- 1
+data[samp==2, "grp"] <- 2
+
+
+centro_1 <- data %>% filter(grp == 1) %>% select(X_1, X_2) %>% colMeans() %>% c
+centro_2 <- data %>% filter(grp == 2) %>% select(X_1, X_2) %>% colMeans() %>% c
+
+afstand <- function(x,y) {
+  sqrt(sum((x-y)^2))
+}
+
+
+afst_1 <- apply(data[,1:2],1,afstand,y=centro_1)
+afst_2 <- apply(data[,1:2],1,afstand,y=centro_2)
+
+
+data$grp2 <- if_else(afst_1 > afst_2, 2, 1)
+
+centro_1 <- data %>% filter(grp2 == 1) %>% select(X_1, X_2) %>% colMeans() %>% c
+centro_2 <- data %>% filter(grp2 == 2) %>% select(X_1, X_2) %>% colMeans() %>% c
+
+afst_1 <- apply(data[,1:2],1,afstand,y=centro_1)
+afst_2 <- apply(data[,1:2],1,afstand,y=centro_2)
+
+data$grp3 <- if_else(afst_1 > afst_2, 2, 1)
+
+p1 <- ggplot(data = data, aes(x = X_1, y = X_2, color = factor(grp))) +
+  geom_point()
+p2 <- ggplot(data = data, aes(x = X_1, y = X_2, color = factor(grp2))) +
+  geom_point()
+
+gridExtra::grid.arrange(p1,p2, nrow= 2)
+
+```
+

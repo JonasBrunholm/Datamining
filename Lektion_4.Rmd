@@ -1,0 +1,64 @@
+---
+title: "Lektion_4"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(MASS)
+```
+
+
+## Opgave 5
+
+Replicate slide 6
+
+
+```{r}
+
+slide_6 <- function(sigma) {
+  x <- MASS::mvrnorm(
+    n = 100,
+    mu = c(0, 0),
+    Sigma = matrix(c(1, sigma, sigma, 1),
+      nrow = 2
+    )
+  )
+
+  y <- x[, 1] - x[, 2] + rnorm(100)
+
+  mod_lm <- lm(y ~ 0 + x)
+  summary(mod_lm)
+}
+
+slide_6(0)
+slide_6(0.5)
+slide_6(0.9)
+```
+
+
+
+## Opgave 6
+
+Implement coordinate descent for OLS
+
+
+```{r}
+sigma <- 0
+x <- MASS::mvrnorm(
+  n = 100,
+  mu = c(0, 0),
+  Sigma = matrix(c(1, sigma, sigma, 1),
+    nrow = 2
+  )
+)
+
+y <- x[, 1] - x[, 2] + rnorm(100)
+
+beta_1 <- c(0)
+
+
+
+
+```
