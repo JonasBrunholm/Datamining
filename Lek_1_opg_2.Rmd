@@ -1,0 +1,66 @@
+---
+title: "Lek_1_opg_2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# opg. 2
+
+## (a)
+
+```{r}
+
+emp <- c(5,20,1,1,15,6,1,12,3,1)
+loan <- c(10000,10000,25000,15000,2000,12000,5000,8000,10000,5000)
+y <- c(0,0,0,0,0,0,1,1,1,1)
+
+data <- tibble(emp = emp, loan = loan, y = y)
+
+data %>% filter(y == 0) %>% pull(emp) %>% var()
+data %>% filter(y == 1) %>% pull(emp) %>% var()
+data %>% filter(y == 0) %>% pull(loan) %>% var()
+data %>% filter(y == 1) %>% pull(loan) %>% var()
+
+```
+
+## (b)
+
+```{r}
+std_data <- data %>% mutate(emp = emp/max(emp),
+                            loan = loan/max(loan))
+new <- c(4/max(emp), 15000/max(loan))
+
+afstande <- std_data[,1:2] - new
+
+order <- apply(afstande, 1, norm, type = "2") %>% order()
+
+
+std_data[order,] %>% filter(row_number() <= 3) %>% pull(y)
+
+```
+
+
+## (c)
+
+```{r}
+data <- std_data
+# mean
+data %>% filter(y == 0) %>% pull(emp) %>%  mean()
+data %>% filter(y == 1) %>% pull(emp) %>%  mean()
+data %>% filter(y == 0) %>% pull(loan) %>% mean()
+data %>% filter(y == 1) %>% pull(loan) %>% mean()
+
+
+
+# var's
+data %>% filter(y == 0) %>% pull(emp) %>% var()
+data %>% filter(y == 1) %>% pull(emp) %>% var()
+data %>% filter(y == 0) %>% pull(loan) %>% var()
+data %>% filter(y == 1) %>% pull(loan) %>% var()
+
+```
+

@@ -1,0 +1,33 @@
+---
+title: "Lek_2_opg_3_ex"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+Sys.setenv(language = "en")
+library(tidyverse)
+```
+
+
+```{r}
+set.seed(2)
+x=matrix(rnorm (50*2) , ncol =2)
+x[1:25 ,1]=(x[1:25 ,1]+3) * 100
+x[1:25 ,2]=x[1:25 ,2] -4
+
+km.out1 = kmeans(x,3, nstart =20)
+km.out2 = kmeans(scale(x),3, nstart =20)
+
+plot(x)
+plot(scale(x))
+
+
+plot(x, col = (km.out$cluster) , main="K-Means Clustering
+Results with K=3", xlab ="", ylab="", pch =20, cex =2)
+
+
+
+
+```
+

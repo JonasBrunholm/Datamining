@@ -1,0 +1,84 @@
+---
+title: "Lektion_4"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(MASS)
+```
+
+
+## Opgave 5
+
+Replicate slide 6
+
+
+```{r}
+
+slide_6 <- function(sigma) {
+  x <- MASS::mvrnorm(
+    n = 100,
+    mu = c(0, 0),
+    Sigma = matrix(c(1, sigma, sigma, 1),
+      nrow = 2
+    )
+  )
+
+  y <- x[, 1] - x[, 2] + rnorm(100)
+
+  mod_lm <- lm(y ~ 0 + x)
+  summary(mod_lm)
+}
+
+slide_6(0)
+slide_6(0.5)
+slide_6(0.9)
+```
+
+
+
+## Opgave 6
+
+Implement coordinate descent for OLS
+
+
+```{r}
+
+coordinate_descent_ols <- function(sigma) {
+  x <- MASS::mvrnorm(
+    n = 100,
+    mu = c(0, 0),
+    Sigma = matrix(c(1, sigma, sigma, 1),
+      nrow = 2
+    )
+  )
+
+  y <- x[, 1] - x[, 2] + rnorm(100)
+
+  beta_1 <- c(0)
+  beta_2 <- c(0)
+  # i <- 0
+
+  for (i in 1:1000000) {
+    res_1 <- y - x[, 2] * beta_2[i]
+
+    beta_1[i + 1] <- solve(t(x[, 1]) %*% x[, 1]) %*% t(x[, 1]) %*% res_1
+
+    res_2 <- y - x[, 1] * beta_1[i + 1]
+
+    beta_2[i + 1] <- solve(t(x[, 2]) %*% x[, 2]) %*% t(x[, 2]) %*% res_2
+    
+    if (abs(beta_1[i+1] - beta_1[i]) < 0.001 & abs(beta_2[i+1] - beta_2[i]) < 0.001) {
+      break
+    }
+  }
+  cat("\n", "Beta_1 sti =", beta_1, "\n", "Beta_2 sti =", beta_2)
+}
+
+coordinate_descent_ols(sigma = 0)
+coordinate_descent_ols(sigma = 0.5)
+coordinate_descent_ols(sigma = 0.9)
+#test
+
+```

@@ -1,0 +1,53 @@
+---
+title: "Data_mining1"
+author: "SM"
+date: "4/2/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+library(dplyr)
+
+#kNN with k = 3
+
+emp <- c(5,20,1,1,15,6,1,12,3,1)
+loan <- 1000*c(10,10,25,15,2,12,5,8,10,5)
+y <- c(0,0,0,0,0,0,1,1,1,1) #Known data
+
+data <- matrix(c(emp,loan,y), ncol = 3,nrow = 10) #Data
+
+std.data <- matrix(c(emp/max(emp),loan/max(loan)), ncol = 2) #Standardize the data
+
+new_data <- c(4/max(emp),15000/max(loan)) # New data
+
+dist <- c() #Creating a dist vector
+
+for (i in 1:10) {
+  dist[i] <- norm(as.matrix(new_data-std.data[i,]), type = "F") #Calculating dist 
+}
+
+rslt <- tibble(dist,y)
+rslt <- rslt[order(rslt$dist),]
+rslt #With k = 3, we will put the person in group "0", which means he should be lent money.
+
+###Loan of 5000 instead of 15000
+
+new_data <- c(4/max(emp),5000/max(loan)) # New data
+
+dist <- c() #Creating a dist vector
+
+for (i in 1:10) {
+  dist[i] <- norm(as.matrix(new_data-std.data[i,]), type = "F") #Calculating dist 
+}
+
+rslt <- tibble(dist,y)
+rslt <- rslt[order(rslt$dist),]
+rslt #Now he can't borrow money, even though he wants a smaller loan. 
+
+```
+
