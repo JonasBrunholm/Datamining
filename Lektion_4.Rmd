@@ -79,6 +79,6 @@ coordinate_descent_ols <- function(sigma) {
 coordinate_descent_ols(sigma = 0)
 coordinate_descent_ols(sigma = 0.5)
 coordinate_descent_ols(sigma = 0.9)
-#test
+
 
 ```
