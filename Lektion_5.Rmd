@@ -42,7 +42,11 @@ table(model$cluster, as.numeric(iris$Species))
 ```{r}
 
 
-FNN::knn()
+model <- FNN::knn(train = iris %>% select(-Species),
+                  test = iris %>% select(-Species),
+                  cl = iris$Species, k = 5)
+
+table(iris$Species, model)
 
 ```
 
