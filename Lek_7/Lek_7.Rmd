@@ -5,4 +5,62 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+Sys.setenv(language="en")
+library(tidyverse)
+library(caret)
 ```
+
+
+```{r}
+
+day <- read_csv("D:/OneDrive - Aalborg Universitet/0Data_mining/Lecture7 (Basis functions, Splines, GAMs)/Exercises/day.csv")
+
+ggplot(data = day, aes(x = atemp, y = cnt)) +
+  geom_point()
+```
+
+# polynomials
+
+```{r}
+
+train.control <- trainControl(method = "cv", number = 5)
+
+model <- train(cnt ~ atemp, data = day, method = "lm",
+               trControl = train.control)
+
+print(model$results)
+
+model <- train(cnt ~ atemp + I(atemp^2), data = day, method = "lm",
+               trControl = train.control)
+
+print(model$results)
+
+model <- train(cnt ~ atemp + I(atemp^2) + I(atemp^3), data = day, method = "lm",
+               trControl = train.control)
+
+print(model$results)
+
+model <- train(cnt ~ atemp + I(atemp^2) + I(atemp^3) + I(atemp^4), data = day, method = "lm",
+               trControl = train.control)
+
+print(model$results)
+
+
+```
+
+# step function
+
+```{r}
+plot <- ggplot(data = day, aes(x = atemp, y = cnt)) +
+  geom_point()
+
+
+step_model <- day %>% select(cnt, atemp) %>%
+  mutate(steps = cut(atemp, breaks = 5)) %>% 
+  lm(cnt~steps, data= .) %>% 
+  predict()  
+
+plot + geom_point(aes(y =step_model), color = "red")
+
+```
+
