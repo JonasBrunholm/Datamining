@@ -8,7 +8,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(nnet)
-
 ```
 
 # logistic regression
@@ -17,13 +16,12 @@ library(nnet)
 
 data(iris)
 
+
 model <- multinom(Species ~ ., data = iris)
 summary(model)
 
 AIC(model)
-table(predict(model), iris$Species)
-
-
+table(iris$Species, predict(model))
 ```
 
 # K-means
@@ -32,8 +30,7 @@ table(predict(model), iris$Species)
 
 model <- kmeans(iris %>% select(-Species), 3)
 
-table(model$cluster, as.numeric(iris$Species))
-
+table(as.numeric(iris$Species), model$cluster)
 ```
 
 
@@ -42,11 +39,11 @@ table(model$cluster, as.numeric(iris$Species))
 ```{r}
 
 
-model <- FNN::knn(train = iris %>% select(-Species),
-                  test = iris %>% select(-Species),
-                  cl = iris$Species, k = 5)
+model <- FNN::knn(
+  train = iris %>% select(-Species),
+  test = iris %>% select(-Species),
+  cl = iris$Species, k = 5
+)
 
 table(iris$Species, model)
-
 ```
-

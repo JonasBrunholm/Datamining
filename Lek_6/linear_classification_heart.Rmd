@@ -1,0 +1,121 @@
+---
+title: "Linear Classification: Heart Disease"
+author: "Data Mining"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data
+
+In this exercise we are going to analyze coronary heart disease determinants. We use data taken from a larger
+dataset, described in  Rousseauw et al, 1983, South African Medical Journal. It contains measurements for several variables of males in a heart-disease high-risk region of the Western Cape, South Africa. These data are, amomg others,
+
+Variable    | Description 
+------------| -------------
+*sbp*   		|systolic blood pressure
+*tobacco*		|cumulative tobacco (kg)
+*ldl*	    	|low density lipoprotein cholesterol
+*famhist*		|family history of heart disease (Present, Absent)
+*alcohol*		|current alcohol consumption
+*age*		    |age at onset
+*chd*		    |response, coronary heart disease
+
+The data is available online and can be loaded directly into R.
+
+```{r}
+heart = read.table("https://web.stanford.edu/~hastie/ElemStatLearn/datasets/SAheart.data",
+                 sep=",",head=T,row.names=1)
+```
+
+We use *attach()* so that we can refer to the names of the variables directly.
+
+```{r}
+attach(heart)
+```
+
+The response variable is the existence of myocardial infarctions, heart attacks. As explanatory variables, we will use measurements of health related variables. We are interested in fitting a linear model like
+
+$$cdh = \beta_0 + \beta_1 tobacco +\beta_2 ldl+\beta_3 famhist+\beta_4 age+ beta_5 sbp + \beta_6 alcohol.$$
+
+As such, we are in a classification setting.
+
+## Logistic Regression
+
+We start by fitting a logistic regression to the data. Logistic regression can be called by the generalized linear models function, *glm()*, by using the additional option *family=binomial*. We then print the results of the estimation by the *summary()* command.
+
+```{r}
+glm.fit = glm(chd~tobacco+ldl+famhist+age+sbp+alcohol,family = binomial)
+summary(glm.fit)
+```
+
+We notice that the standard errors of the estimators associated to *sbp* and *alcohol* are large relative to the values of the estimators, which points to them not beign different than zero. This notion can be statistically shown by looking at their z-values, which are quite close to zero, with associated p-values quite large.
+
+We may be interested in removing these non-significant variables from the specification; thus, we estimate the following model 
+$$cdh = \beta_0 + \beta_1 tobacco +\beta_2 ldl+\beta_3 famhist+\beta_4 age+ beta_5 sbp + \beta_6 alcohol.$$
+by logistic regression.
+
+```{r}
+glm.fit = glm(chd~tobacco+ldl+famhist+age,family = binomial)
+summary(glm.fit)
+```
+
+As we will see in future lectures, we can use the Akaike Criterion *AIC* to choose between competing models. In this example, we notice that the both *AIC* are close although it is smaller for the reduced model. This may be used as a determinant as to prefer the reduced model given its reduced complexity over the full one above.
+
+Moreover, in the reduced model all variables are statistically significant and have the expected sign. In particular, smoking and higher levels of cholesterol increase the probability of developing a myocardial infarction, a heart attack.
+
+## Linear Discriminant Analysis
+
+We fit now LDA to the specification. We use the *lda()* function which is part of the "MASS" package.
+
+```{r}
+library("MASS")
+lda.fit = lda(chd~tobacco+ldl+famhist+age)
+lda.fit
+```
+
+We note that the estimates are quite close to the ones from logistic regression. This due to the fact that the two algorithms assume a linear model, differing only on the estimation technique.
+
+## Prediction
+
+Once we have fitted all the models, we can use the estimates to assess the probabilities of developing myocardial infarctions at different levels of smoking.
+
+To do so, we construct a new variable with the rest of the other variables fixed at their mean, while we fix tobacco to three different levels: 0, its mean, and the third quartile.
+
+```{r}
+new = data.frame(tobacco=c(0,mean(tobacco),13.60),ldl=rep(mean(ldl),3),
+                 famhist=c("Present","Present","Present"),age=rep(mean(age),3)) 
+```
+
+Once we have defined the new data frame we can make predictions by the *predict()* function.
+
+```{r}
+lda.pred = predict(lda.fit,newdata = new)
+glm.pred = predict(glm.fit,newdata = new,type="response")
+```
+
+We can then note the probabilityes by
+
+```{r}
+glm.pred
+lda.pred$posterior[,2]
+```
+
+Note the increase in the probabilities increase as the variable tobacco increases.
+
+Furthermore, note that the effect depends on the value of the other variables. To show this, we evaluate the effect of an increase in tobacco consumption for individuals without famility history of heart disease.
+
+```{r}
+new2 = data.frame(tobacco=c(0,mean(tobacco),13.60),ldl=rep(mean(ldl),3),
+                 famhist=c("Absent","Absent","Absent"),age=rep(mean(age),3))
+lda.pred = predict(lda.fit,newdata = new2)
+glm.pred = predict(glm.fit,newdata = new2,type="response")
+glm.pred
+lda.pred$posterior[,2]
+```
+
+Note that, as before, the probabilities increase as the variable tobacco increases. Nonetheless, the probabilities are lower than for individuals with family history of heart disease.
