@@ -5,24 +5,95 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+Sys.setenv(language="en")
+library(tidyverse)
+library(tree)
+library(randomForest)
+library(gbm)
 ```
 
-## R Markdown
+# Coding
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+```{r}
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+set.seed(69)
 
-```{r cars}
-summary(cars)
+
+x_1 <- rnorm(300)
+x_2 <- rnorm(300)
+
+eps <- rnorm(300)/2
+
+y_1 <- 1 + 2 * x_1 + 3 * x_2 + eps
+
+lm_mod <- lm(y_1 ~ x_1 + x_2)
+summary(lm_mod)
+
+tree_mod <- tree::tree(y_1 ~ x_1 + x_2)
+
+summary(tree_mod)
+
+
+x_11 <- x_1 > 0
+x_22 <- x_2 > 0
+
+y_11 <- 1 + 2 * x_11 + 3 * x_22 + eps
+
+lm_mod_bin <- lm(y_11 ~ x_11 + x_22)
+summary(lm_mod_bin)
+
+tree_mod_bin <- tree::tree(y_11 ~ x_11 + x_22)
+
+summary(tree_mod_bin)
+
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+# Practical
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+
+day <- read_csv("Lek_8/day.csv", guess_max = 731)
+data <- day %>% select(cnt,atemp,hum,windspeed,season,holiday,workingday,weathersit)
+
+day_tree_mod <- tree(cnt ~ ., data = data)
+
+plot(day_tree_mod)
+text(day_tree_mod, pretty = 0)
+
+summary(day_tree_mod)
+
+#bagging
+
+day_baggin_mod <- randomForest::randomForest(cnt ~ . , 
+                                             data = data, 
+                                             mtry = ncol(data)-1,
+                                             importance = T)
+day_baggin_mod
+
+randomForest::importance(day_baggin_mod)
+
+# random forest
+day_random_mod <- randomForest::randomForest(cnt ~ . ,
+                                             data = data,
+                                             mtry = ceiling(sqrt(ncol(data)-1)),
+                                             importance = T)
+day_random_mod
+
+randomForest::importance(day_random_mod)
+
+
+#boosting
+
+day_boost_mod <- gbm::gbm(formula = cnt ~ .,
+                          distribution = "gaussian",
+                          data = data,
+                          n.trees = 5000,
+                          interaction.depth = 1,
+                          n.cores = 3)
+
+summary(day_boost_mod)
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
