@@ -12,6 +12,7 @@ library(tidyverse)
 library(magrittr)
 library(caret)
 library(tree)
+library(glmnet)
 ```
 
 
@@ -86,6 +87,18 @@ plot(tree_model)
 text(tree_model)
 
 summary(tree_model)
+
+
+```
+
+
+
+# Lasso
+
+```{r}
+lasso_mod <- glmnet(as.matrix(data[,-(1:2)]), as.matrix(data[,2]), alpha = 1)
+
+plot(lasso_mod)
 
 
 ```
