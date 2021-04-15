@@ -1,6 +1,8 @@
 ---
 title: "Self_study"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -9,6 +11,7 @@ Sys.setenv(language="en")
 library(tidyverse)
 library(magrittr)
 library(caret)
+library(tree)
 ```
 
 
@@ -25,7 +28,7 @@ data_pre_filter <- covid %>%
 
 data_pre_filter %>%
   arrange(desc(death_percent)) %>% 
-  slice_head(n=5) %>% 
+  # slice_head(n=5) %>% 
   # slice_sample(n = 20) %>%
   ggplot(aes(x = reorder(Country,death_percent), y = death_percent,fill = death_percent)) +
   geom_col()
@@ -54,22 +57,35 @@ qqline(resid(model))
 
 resid(model) %>%
   which.max() %>%
-  list(model$fitted.values[.],
-  data.frame(data[.,]))
+  list(model_value = model$fitted.values[.],
+  real_value = data.frame(data[.,]))
 
-model$fitted.values[165]
 
 ```
 
 
-# CV GLM
+# classification tree
 
 ```{r}
 
-train.control <- trainControl(method = "cv", number = 5)
+# 2 categories in death_percent
+nr_obs <- function(data, n) {
+  return(sort(data)[n])
+}
 
-model <- train(death_percent ~ ., data = data %>% select(-Country), method = "lm",
-               trControl = train.control)
+
+data_cat <- data %>% 
+  mutate(death_percent_category = cut(death_percent,
+                                      breaks = c(0, nr_obs(death_percent, 25), max(death_percent)),
+                                      labels = c("low", "high"))) %>% 
+  select(-death_percent)
+
+tree_model <- tree(death_percent_category ~ . , data = data_cat %>% select(-Country))
+
+plot(tree_model)
+text(tree_model)
+
+summary(tree_model)
 
 
 ```
