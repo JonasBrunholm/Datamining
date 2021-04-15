@@ -8,7 +8,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Sys.setenv(language="en")
 library(tidyverse)
 library(magrittr)
-
+library(caret)
 ```
 
 
@@ -16,7 +16,6 @@ library(magrittr)
 # data
 
 ```{r}
-
 covid <- read_csv("Self-Study/Data_COVID_OWID_per_capita.csv") %>% tibble()
 
 data_pre_filter <- covid %>% 
@@ -25,7 +24,9 @@ data_pre_filter <- covid %>%
   select(-TotalDeaths, -TotalCases)
 
 data_pre_filter %>%
-  slice_sample(n = 20) %>%
+  arrange(desc(death_percent)) %>% 
+  slice_head(n=5) %>% 
+  # slice_sample(n = 20) %>%
   ggplot(aes(x = reorder(Country,death_percent), y = death_percent,fill = death_percent)) +
   geom_col()
 
@@ -34,10 +35,42 @@ high_na_percent <- data_pre_filter %>%
   apply(., 2, sum) %>%
   sort(decreasing = T) %T>% print()
 
-data <- data_pre_filter %>% select(-names(high_na_percent)[1:25])
+ 
+data <- data_pre_filter %>% select(Country, death_percent, LifeExpectancy, Literacy, Population,
+                                   ReproductionRate, Diabetes, HumanRights,
+                                   Cardiovascular, PopulationDensity, Sanitation,
+                                   UnsafeWater, MedianAge, HealthShare, SmokeDaily,
+                                   Aged70, Drinking, Overweight) %>% na.omit()
+```
 
+# GLM
+
+```{r}
 model <- lm(death_percent ~ ., data = data %>% select(-Country))
 summary(model)
+
+qqnorm(resid(model))
+qqline(resid(model))
+
+resid(model) %>%
+  which.max() %>%
+  list(model$fitted.values[.],
+  data.frame(data[.,]))
+
+model$fitted.values[165]
+
+```
+
+
+# CV GLM
+
+```{r}
+
+train.control <- trainControl(method = "cv", number = 5)
+
+model <- train(death_percent ~ ., data = data %>% select(-Country), method = "lm",
+               trControl = train.control)
+
 
 ```
 
