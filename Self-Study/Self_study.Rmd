@@ -5,24 +5,39 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+Sys.setenv(language="en")
+library(tidyverse)
+library(magrittr)
+
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+# data
 
-```{r cars}
-summary(cars)
+```{r}
+
+covid <- read_csv("Self-Study/Data_COVID_OWID_per_capita.csv") %>% tibble()
+
+data_pre_filter <- covid %>% 
+  mutate(death_percent = TotalDeaths/TotalCases) %>% 
+  filter(!is.na(death_percent)) %>% 
+  select(-TotalDeaths, -TotalCases)
+
+data_pre_filter %>%
+  slice_sample(n = 20) %>%
+  ggplot(aes(x = reorder(Country,death_percent), y = death_percent,fill = death_percent)) +
+  geom_col()
+
+high_na_percent <- data_pre_filter %>%
+  apply(., 2, is.na) %>%
+  apply(., 2, sum) %>%
+  sort(decreasing = T) %T>% print()
+
+data <- data_pre_filter %>% select(-names(high_na_percent)[1:25])
+
+model <- lm(death_percent ~ ., data = data %>% select(-Country))
+summary(model)
+
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
