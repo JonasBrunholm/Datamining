@@ -135,7 +135,7 @@ for (i in 1:10) {
 plot(Albuen) # Plot says roughly 6 clusters
 
 #Kmeans with 6 clusters
-kmean <- kmeans(data_no_country, centers = 6, nstart = 1, iter.max = 10)
+kmean <- kmeans(dat_new, centers = 6, nstart = 1, iter.max = 10)
 
 #Inspecting the number of countries in each clsuter
 kmean$cluster %>% as.factor() %>% summary()
@@ -147,12 +147,12 @@ cluster_result <- tibble("Country" = k_means_data$Country, "Cluster" = kmean$clu
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
 #More preparation
-plot_world <- world %>% left_join(cluster_result, by = c("brk_a3" = "Country"))
+plot_world <- world %>% left_join(cluster_result, by = c("brk_a3" = "Country")) %>% mutate(Cluster = as.factor(Cluster))
 
 #Kmeans with k = 6 result on a world map. It almost looks as it is grouped by continent
 ggplot(data = plot_world) +
     geom_sf(aes(fill = Cluster)) +
-    scale_fill_viridis_c(option = "plasma")
+    scale_fill_viridis_d(option = "plasma")
 ```
 
 
