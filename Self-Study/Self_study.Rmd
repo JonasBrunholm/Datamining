@@ -10,9 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 Sys.setenv(language="en")
 library(tidyverse)
 library(magrittr)
-library(caret)
+#library(caret)
 library(tree)
-library(glmnet)
+#library(glmnet)
 ```
 
 
@@ -109,10 +109,26 @@ plot(lasso_mod)
 
 data_no_country <- data %>% select(-Country)
 
-kmean_rslt <- kmeans(data_no_country, centers = 4, nstart = 1) 
+dat_new <- sapply(data_no_country, function(x){
+  x/max(x)
+})
 
+Albuen <- c()
 
-kmean_rslt$betweenss/kmean_rslt$tot.withinss
+for (i in 1:10) {
+  kmean_rslt <- kmeans(dat_new, centers = i, nstart = 1)
+  Albuen[i] <- kmean_rslt$tot.withinss/kmean_rslt$totss
+}
+
+plot(Albuen) # Plot says roughly 7 clusters
+
+kmean <- kmeans(data_no_country, centers = 7, nstart = 1, iter.max = 10)
+
+kmean$cluster %>% as.factor() %>% summary()
+
+data$Country %>% bind_cols(kmean$cluster)
+
+tibble("Country" = data$Country, "Cluster" = kmean$cluster) %>% filter(Cluster == 1)
 
 ```
 
