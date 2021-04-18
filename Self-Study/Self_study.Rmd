@@ -110,7 +110,11 @@ plot(lasso_mod)
 
 ```{r}
 
-data_no_country <- data %>% select(-Country)
+k_means_data <- covid %>% select(Country, TotalDeaths, TotalCases) %>% 
+  na.omit()
+
+
+data_no_country <- k_means_data %>% select(-Country)
 
 dat_new <- sapply(data_no_country, function(x){
   x/max(x)
@@ -125,13 +129,13 @@ for (i in 1:10) {
 
 plot(Albuen) # Plot says roughly 7 clusters
 
-kmean <- kmeans(data_no_country, centers = 7, nstart = 1, iter.max = 10)
+kmean <- kmeans(data_no_country, centers = 5, nstart = 1, iter.max = 10)
 
 kmean$cluster %>% as.factor() %>% summary()
 
-data$Country %>% bind_cols(kmean$cluster)
+# data$Country %>% bind_cols(kmean$cluster)
 
-tibble("Country" = data$Country, "Cluster" = kmean$cluster) %>% filter(Cluster == 1)
+# tibble("Country" = k_means_data$Country, "Cluster" = k_means_data$cluster) %>% filter(Cluster == 1)
 
 ```
 
@@ -139,7 +143,7 @@ tibble("Country" = data$Country, "Cluster" = kmean$cluster) %>% filter(Cluster =
 
 
 ```{r}
-cluster_result <- tibble("Country" = data$Country, "Cluster" = kmean$cluster)
+cluster_result <- tibble("Country" = k_means_data$Country, "Cluster" = kmean$cluster)
 
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
@@ -148,7 +152,7 @@ plot_world <- world %>% left_join(cluster_result, by = c("brk_a3" = "Country"))
 
 ggplot(data = plot_world) +
     geom_sf(aes(fill = Cluster)) +
-    scale_fill_viridis_c(option = "plasma", trans = "sqrt")
+    scale_fill_viridis_c(option = "plasma")
 
 
 ```
