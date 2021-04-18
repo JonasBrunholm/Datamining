@@ -13,6 +13,9 @@ library(magrittr)
 #library(caret)
 library(tree)
 #library(glmnet)
+library("sf")
+library("rnaturalearth")
+library("rnaturalearthdata")
 ```
 
 
@@ -129,6 +132,24 @@ kmean$cluster %>% as.factor() %>% summary()
 data$Country %>% bind_cols(kmean$cluster)
 
 tibble("Country" = data$Country, "Cluster" = kmean$cluster) %>% filter(Cluster == 1)
+
+```
+
+
+
+
+```{r}
+cluster_result <- tibble("Country" = data$Country, "Cluster" = kmean$cluster)
+
+
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+plot_world <- world %>% left_join(cluster_result, by = c("brk_a3" = "Country"))
+
+ggplot(data = plot_world) +
+    geom_sf(aes(fill = Cluster)) +
+    scale_fill_viridis_c(option = "plasma", trans = "sqrt")
+
 
 ```
 
