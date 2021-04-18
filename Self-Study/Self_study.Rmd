@@ -10,12 +10,13 @@ knitr::opts_chunk$set(echo = TRUE)
 Sys.setenv(language="en")
 library(tidyverse)
 library(magrittr)
-#library(caret)
+library(caret)
 library(tree)
-#library(glmnet)
-library("sf")
-library("rnaturalearth")
-library("rnaturalearthdata")
+library(glmnet)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(rgeos)
 ```
 
 
@@ -23,25 +24,32 @@ library("rnaturalearthdata")
 # data
 
 ```{r}
-covid <- read_csv("Self-Study/Data_COVID_OWID_per_capita.csv") %>% tibble()
+covid <- read_csv("Self-Study/Data_COVID_OWID_per_capita.csv") %>% tibble()  #Reading the data into a tibble
+
+# Removing TotalDeaths and TotalCases while introducing death_percent instead
 
 data_pre_filter <- covid %>% 
   mutate(death_percent = TotalDeaths/TotalCases) %>% 
   filter(!is.na(death_percent)) %>% 
-  select(-TotalDeaths, -TotalCases)
+  select(-TotalDeaths, -TotalCases) 
+
+#Death percent each country.
 
 data_pre_filter %>%
   arrange(desc(death_percent)) %>% 
   # slice_head(n=5) %>% 
   # slice_sample(n = 20) %>%
   ggplot(aes(x = reorder(Country,death_percent), y = death_percent,fill = death_percent)) +
-  geom_col()
+  geom_col()  
+
+#Finding variables with high NA numbers.
 
 high_na_percent <- data_pre_filter %>%
   apply(., 2, is.na) %>%
   apply(., 2, sum) %>%
   sort(decreasing = T) %T>% print()
 
+#Choosing interesting variables. 
  
 data <- data_pre_filter %>% select(Country, death_percent, LifeExpectancy, Literacy, Population,
                                    ReproductionRate, Diabetes, HumanRights,
@@ -53,12 +61,17 @@ data <- data_pre_filter %>% select(Country, death_percent, LifeExpectancy, Liter
 # GLM
 
 ```{r}
-model <- lm(death_percent ~ ., data = data %>% select(-Country))
-summary(model)
 
+#Classic GLM on all the chosen data without country 
+model <- lm(death_percent ~ ., data = data %>% select(-Country))
+summary(model) #Alot of the parameters used are not significant.
+
+
+#Checking Residuals. Generally looking nice.
 qqnorm(resid(model))
 qqline(resid(model))
 
+#Yemen is the extreme outlier seen in the QQ-plot.
 resid(model) %>%
   which.max() %>%
   list(model_value = model$fitted.values[.],
@@ -77,15 +90,15 @@ nr_obs <- function(data, n) {
   return(sort(data)[n])
 }
 
-
+#Removing data percent and grouping accordingly to high or low death percent
 data_cat <- data %>% 
   mutate(death_percent_category = cut(death_percent,
                                       breaks = c(0, nr_obs(death_percent, 25), max(death_percent)),
                                       labels = c("low", "high"))) %>% 
   select(-death_percent)
 
+#Making a tree model. This shows that the most important factor here is the population. 
 tree_model <- tree(death_percent_category ~ . , data = data_cat %>% select(-Country))
-
 plot(tree_model)
 text(tree_model)
 
@@ -94,66 +107,53 @@ summary(tree_model)
 
 ```
 
-
-
-# Lasso
-
-```{r}
-lasso_mod <- glmnet(as.matrix(data[,-(1:2)]), as.matrix(data[,2]), alpha = 1)
-
-plot(lasso_mod)
-
-
-```
-
 # k-means
 
 ```{r}
 
+#Trying to make k-means when only looking at the total deaths and cases for each country. 
+
 k_means_data <- covid %>% select(Country, TotalDeaths, TotalCases) %>% 
   na.omit()
 
-
+#Removing country in order to actually be able to use K-means. 
 data_no_country <- k_means_data %>% select(-Country)
+
+#Standardizing the data 
 
 dat_new <- sapply(data_no_country, function(x){
   x/max(x)
 })
 
+#Creating an empty vector which will be used to determine how many clusters we will use
 Albuen <- c()
-
+#Fitting different numbers of kmeans with varying clusters
 for (i in 1:10) {
   kmean_rslt <- kmeans(dat_new, centers = i, nstart = 1)
   Albuen[i] <- kmean_rslt$tot.withinss/kmean_rslt$totss
 }
+plot(Albuen) # Plot says roughly 6 clusters
 
-plot(Albuen) # Plot says roughly 7 clusters
+#Kmeans with 6 clusters
+kmean <- kmeans(data_no_country, centers = 6, nstart = 1, iter.max = 10)
 
-kmean <- kmeans(data_no_country, centers = 5, nstart = 1, iter.max = 10)
-
+#Inspecting the number of countries in each clsuter
 kmean$cluster %>% as.factor() %>% summary()
 
-# data$Country %>% bind_cols(kmean$cluster)
-
-# tibble("Country" = k_means_data$Country, "Cluster" = k_means_data$cluster) %>% filter(Cluster == 1)
-
-```
-
-
-
-
-```{r}
+#Storing in a tibble
 cluster_result <- tibble("Country" = k_means_data$Country, "Cluster" = kmean$cluster)
 
-
+#Preparing for a world plot
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
+#More preparation
 plot_world <- world %>% left_join(cluster_result, by = c("brk_a3" = "Country"))
 
+#Kmeans with k = 6 result on a world map. It almost looks as it is grouped by continent
 ggplot(data = plot_world) +
     geom_sf(aes(fill = Cluster)) +
     scale_fill_viridis_c(option = "plasma")
-
-
 ```
+
+
 
