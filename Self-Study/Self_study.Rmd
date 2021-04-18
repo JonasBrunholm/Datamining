@@ -103,3 +103,16 @@ plot(lasso_mod)
 
 ```
 
+# k-means
+
+```{r}
+
+data_no_country <- data %>% select(-Country)
+
+kmean_rslt <- kmeans(data_no_country, centers = 4, nstart = 1) 
+
+
+kmean_rslt$betweenss/kmean_rslt$tot.withinss
+
+```
+
