@@ -1,0 +1,117 @@
+---
+title: 'Neural Networks: Heart Disease'
+author: "Data Mining"
+output: pdf_document
+---
+
+## Data
+
+In this exercise we are going to analyze coronary heart disease determinants. We use data taken from a larger
+dataset, described in  Rousseauw et al, 1983, South African Medical Journal. It contains measurements for several variables of males in a heart-disease high-risk region of the Western Cape, South Africa. These data are, amomg others,
+
+Variable    | Description 
+------------| -------------
+*sbp*   		|systolic blood pressure
+*tobacco*		|cumulative tobacco (kg)
+*ldl*	    	|low density lipoprotein cholesterol
+*famhist*		|family history of heart disease (Present, Absent)
+*alcohol*		|current alcohol consumption
+*age*		    |age at onset
+*chd*		    |response, coronary heart disease
+
+The data is available online and can be loaded directly into R.
+
+```{r}
+heart = read.table("https://web.stanford.edu/~hastie/ElemStatLearn/datasets/SAheart.data",
+                 sep=",",head=T,row.names=1)
+attach(heart)
+```
+
+We scale the explanatory variables by defining
+
+$$x_{scale} = \frac{x-\min{x}}{\max{x}-\min{x}}.$$
+
+Furthermore, we create a data frame with the scaled explanatory variables and the dependent variable.
+
+```{r}
+raw = data.frame(tobacco,adiposity,age,ldl)
+max = apply(raw , 2 , max)
+min = apply(raw , 2 , min)
+scaled = as.data.frame(scale(raw, center = min, scale = max - min))
+
+data = data.frame(chd,scaled)
+```
+
+## Logistic Regression
+
+As benchmark, we estimate the model using logistic regression.
+
+
+```{r}
+glm.fit = glm(chd~tobacco+ldl+age+adiposity,family = binomial)
+```
+
+And predict the classes.
+
+```{r}
+glm.pred = predict(glm.fit,type="response")
+chd.pred.lr = 1*(glm.pred>0.5)
+```
+
+We obtain the confusion matrix.
+
+```{r}
+tab.lr = table(chd,chd.pred.lr)
+tab.lr
+```
+
+And we obtain the false positive and true positive rates.
+
+```{r}
+fpr.lr = tab.lr[1,2]/length(chd[chd==0])
+tpr.lr = tab.lr[2,2]/length(chd[chd==1])
+
+fpr.lr
+tpr.lr
+```
+
+## Neural Networks
+
+We estimate a neural network using the *neuralnet* function from the package of the same name.
+
+We decide to use a network with two hidden layers with three and two neurons, respectively.
+
+```{r}
+library(neuralnet)
+nn.heart = neuralnet(chd~tobacco+ldl+age+adiposity,data=data,hidden = c(3,2))
+```
+
+We plot the neural network just estimated.
+
+```{r}
+plot(nn.heart)
+```
+
+We use the estimated neural network top predict the classes. We use a 0.5 threshold.
+
+```{r}
+predict.nn = compute(nn.heart, data)
+chd.pred.nn = 1*(predict.nn$net.result>0.5)
+```
+
+Obtaining the confusion matrix.
+
+```{r}
+tab.nn = table(chd,chd.pred.nn)
+tab.nn
+```
+
+And computing the false positive and true positive rates.
+
+```{r}
+fpr.nn = tab.nn[1,2]/length(chd[chd==0])
+tpr.nn = tab.nn[2,2]/length(chd[chd==1])
+
+fpr.nn
+tpr.nn
+```
