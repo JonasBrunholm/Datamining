@@ -200,16 +200,25 @@ Assume that we do not know that there are 3 species of flowers. Lets make use of
 the elbow method to decide of the amount of clusters to use in K-means.
 
 ```{r}
-library(tidyverse)
+suppressMessages(library(tidyverse))
 library(ggplot2)
 data("iris")
 
 Dat <- iris %>% select(-Species)
 head(Dat)
 
+Dat_Standardized <- sapply(Dat, FUN = function(x){
+  x/max(x)
+})
+
+Dat_Compare_Standardized <- Dat_Standardized %>% as.data.frame %>%
+  mutate(Species = as.numeric(iris$Species))
+
+
+
 Albuen <- c()
 for (i in 1:5) {
-  tmp <- kmeans(Dat, i)
+  tmp <- kmeans(Dat_Standardized, i, nstart = 50)
   Albuen[i] <- tmp$tot.withinss/tmp$totss
 }
 Albue_Plot <- tibble(PVE = Albuen, Clusters = seq_along(PVE))
@@ -217,9 +226,56 @@ Albue_Plot <- tibble(PVE = Albuen, Clusters = seq_along(PVE))
 ggplot(data = Albue_Plot, mapping = aes(x = Clusters, y = PVE)) +
   geom_point()
 
-#From the elbow method, we would most likely be satisfied with 2 clusters, when
-#in reality, 3 clusters are present in the data. It is arguable that 3 clusters
-#should be chosen according to the plot, but that is up to the individual. 
-
 ```
 
+From the elbow method, we would most likely be satisfied with 2 clusters, when
+in reality, 3 clusters are present in the data. It is arguable that 3 clusters
+should be chosen according to the plot, but that is up to the individual. 
+
+Lets now try to use Hierarchical Clustering
+
+```{r}
+
+Complete_hclust <- hclust(d = dist(Dat_Standardized), method = "complete") 
+
+plot(Complete_hclust) 
+
+res_complete <- cutree(Complete_hclust, 3)
+
+res_single <- hclust(d = dist(Dat_Standardized), method = "single") %>% cutree(3)
+
+res_average <- hclust(d = dist(Dat_Standardized), method = "average") %>% cutree(3)
+
+res_centroid <- hclust(d = dist(Dat_Standardized), method = "centroid") %>% cutree(3)
+
+par(mfrow=c(2,2))
+par(mar=c(4,4,2,1))
+## Results
+plot(Dat_Standardized[,1:2], pch = res_complete + 1, col = res_complete + 1, main = "complete")
+plot(Dat_Standardized[,3:4], pch = res_complete + 1, col = res_complete + 1, main = "complete")
+
+plot(Dat_Standardized[,1:2], pch = res_single + 1, col = res_single + 1, main = "single")
+plot(Dat_Standardized[,3:4], pch = res_single + 1, col = res_single + 1, main = "single")
+
+plot(Dat_Standardized[,1:2], pch = res_average + 1, col = res_average + 1, main = "average")
+plot(Dat_Standardized[,3:4], pch = res_average + 1, col = res_average + 1, main = "average")
+
+plot(Dat_Standardized[,1:2], pch = res_centroid + 1, col = res_centroid + 1, main = "centroid")
+plot(Dat_Standardized[,3:4], pch = res_centroid + 1, col = res_centroid + 1, main = "centroid")
+
+##########True groupings ##########
+plot(Dat_Standardized[,1:2], pch = Dat_Compare_Standardized$Species + 1, col = res_complete + 1, main = "true")
+plot(Dat_Standardized[,3:4], pch = Dat_Compare_Standardized$Species + 1, col = res_complete + 1, main = "true")
+plot(Dat_Standardized[,1:2], pch = res_average + 1, col = res_average + 1, main = "average")
+plot(Dat_Standardized[,3:4], pch = res_average + 1, col = res_average + 1, main = "average")
+#Very similar, unlike some of the other methods. Complete and average looks best for this problem.
+plot(Dat_Standardized[,1:2], pch = Dat_Compare_Standardized$Species + 1, col = res_complete + 1, main = "true")
+plot(Dat_Standardized[,3:4], pch = Dat_Compare_Standardized$Species + 1, col = res_complete + 1, main = "true")
+plot(Dat_Standardized[,1:2], pch = res_complete + 1, col = res_complete + 1, main = "complete")
+plot(Dat_Standardized[,3:4], pch = res_complete + 1, col = res_complete + 1, main = "complete")
+```
+
+
+Some of the chosen linkage methods actually gets very close to the right classification.
+However, when looking at the plots, it is also easy to see why it is hard to distinguish
+between 2 or 3 clusters. 
