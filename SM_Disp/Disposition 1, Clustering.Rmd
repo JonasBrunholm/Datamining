@@ -1,0 +1,225 @@
+---
+title: "Topic 1; Clustering: K-means, Hierarchical Clustering"
+output: html_document
+author: Jonas Mikkelsen
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# K-means
+
+The K-means is an unsupervised partitioning clustering method. No response variable.
+It is partitioning because it creates independent groups dissimilar between them,
+but similar within. 
+
+Assume we have data $D = (x_1,\ldots,x_n)$ where $x_i\in\mathbb{R}^p$. 
+The idea of K-means is to assign them into K different groups where the elements
+inside one group is as similar as possible.
+
+Denote $C_1,\ldots,C_K$ the $K$ different groups. The K-means method solves
+
+\begin{align*}
+min_{C_1,\ldots,C_K}\left(\sum_{k=1}^KW(C_k)\right)
+\end{align*}
+
+Where $W(C_k)$ is the withing cluster variation, i.e. dissimilarity within
+the k'th cluster. The most used dissimilarity measure is the squared Euclidian 
+distance, i.e. 
+
+\begin{align*}
+W(C_k) := \frac{1}{|C_k|}\sum_{i,i'\in C_k}\sum_{j=1}^p(x_{i,j}-x_{i',j})^2
+\end{align*}
+
+The solution can be too hard to obtain due to the vast amount of combinations.
+As a result, K-means uses a greedy algorithm that gives local solutions. 
+A greedy algorithm is an algorithm that always chooses the next value that offers
+the most obvious and immediate benefit. Thus local solutions, and not necessarily 
+global solutions. 
+
+Returning to the problem, by substituting the dissimilarity measure chosen, we 
+get that K-means looks to solve
+
+\begin{align*}
+min_{C_1,\ldots,C_K}\left(\sum_{k=1}^K\frac{1}{|C_k|}\sum_{i,i'\in C_k}\sum_{j=1}^p(x_{i,j}-x_{i',j})^2\right).
+\end{align*}
+
+Next, let $\bar{x}_{k,j} = \frac{1}{|C_k|}\sum_{i\in C_k}x_{i,j}$. Then we have that 
+
+\begin{align*}
+\frac{1}{|C_k|}\sum_{i,i'\in C_k}\sum_{j=1}^p(x_{i,j}-x_{i',j})^2 &=
+\frac{1}{|C_k|}\sum_{i,i'\in C_k}\sum_{j=1}^p(x_{i,j}-\bar{x}_{k,j} + \bar{x}_{k,j} -x_{i',j})^2\\
+& = \frac{1}{|C_k|}\sum_{i,i'\in C_k}\sum_{j=1}^p \left((x_{i,j}-\bar{x}_{k,j})^2
++(\bar{x}_{k,j} -x_{i',j})^2 + 2(x_{i,j}-\bar{x}_{k,j})(\bar{x}_{k,j} -x_{i',j})\right)
+\end{align*}
+
+Next, notice that $\sum_{i,i'\in C_k}=\sum_{i\in C_k}\sum_{i'\in C_k}$ (it is a double sum).
+Additionally, there are $|C_k|$ elements in each cluster. Using this, swapping the sums
+and the previous equations yields that 
+
+\begin{align*}
+\frac{1}{|C_k|}\sum_{i,i'\in C_k}\sum_{j=1}^p(x_{i,j}-x_{i',j})^2 &= \frac{1}{|C_k|}
+\left\{\sum_{j=1}^p|C_k|\sum_{i}(x_{i,j}-\bar{x}_{k,j})^2+\sum_{j=1}^p|C_k|\sum_{i'}
+(\bar{x}_{k,j}-x_{i',j})^2 \right\}\\
+&+ \frac{2}{|C_k|}\sum_{j=1}^p\sum_{i}\sum_{i'}(x_{i,j}\bar{x}_{k,j}-x_{i,j}x_{i',j}
+-\bar{x}_{k,j}^2 + \bar{x}_{k,j}x_{i',j})\\
+&= 2\sum_{j=1}^p\sum_i(x_{i,j}-\bar{x}_{k,j})^2\\
+&+ \frac{2}{|C_k|}\sum_{j=1}^p\left\{\bar{x}_{k,j}|C_k|\sum_ix_{i,j}-\sum_i\sum_{i'}
+x_{i,j}x_{i',j}-|C_k|^2\bar{x}_{k,j}^2+\bar{x}_{k,j}|C_k|\sum_{i'}x_{i',j}\right\}\\
+&=2\sum_{i}\sum_{j=1}^p(x_{i,j}-\bar{x}_{k,j})^2\\
+&+ \frac{2}{|C_k|}\sum_{j=1}^p\left\{\sum_i x_{i,j} \sum_{i'} x_{i',j} - 
+\sum_{i} x_{i,j}\sum_{i'} x_{i',j} - \sum_{i} x_{i,j}\sum_{i'} x_{i',j} +
+\sum_{i} x_{i,j}\sum_{i'} x_{i',j}\right\}\\
+&=2\sum_{i}\sum_{j=1}^p(x_{i,j}-\bar{x}_{k,j})^2
+\end{align*}
+
+For the second to last equality, we used the definition of $\bar{x}_{k,j}$ and 
+the fact that $i$ and $i'$ are interchangeable. Substituting this into the original
+problem yields that K-means looks to solve
+
+\begin{align*}
+min_{C_1,\ldots,C_K}\left(2\sum_{k=1}^K\sum_{i\in C_k}\sum_{j=1}^p(x_{i,j}-\bar{x}_{k,j})^2\right).
+\end{align*}
+
+Next, note that
+
+\begin{align*}
+  \bar{x}_{k,j} = min_{\mu_k}\left\{\sum_{i\in C_k}\sum_{j=1}^p(x_{i,j}-\mu_k)^2\right\}.
+\end{align*}
+
+That is, if we want to explain the response with a constant, the solution to this problem 
+is the mean, $\bar{x}_{k,j}$. Hence we can instead consider the problem
+
+\begin{align*}
+min_\underset{\mu_1,\ldots,\mu_K}{C_1,\ldots,C_K}\left(\sum_{k=1}^K\sum_{i\in C_k}\sum_{j=1}^p(x_{i,j}-\mu_k)^2\right).
+\end{align*}
+
+Thus K-means tries to iteratively solve for $\{C_1,\ldots,C_K\}$ and $\{\mu_1,\ldots,\mu_K\}$,
+that is, the clusters and the cluster means. It first starts by finding the clusters,
+then calculating means, finding new clusters, etc until convergence. This means that the
+K-means is a greedy algorithm. The algorithm itself is given by the following
+
+
+1. Choose the number of cluster K.
+2. Randomly assign each element to one of the K different clusters, which is the initial clusters.
+3. For each cluster, compute the centroid, $c_k$, that is, the mean of the observations
+in the cluster $C_k$,
+
+\begin{align*}
+c_k = |C_k|^{-1}\sum_{i\in C_k}x_i
+\end{align*}
+
+4. Compute the distances from each point to the centroids and assign each observation
+to the closets centroid.
+5. Repeat 3-4 until convergence. 
+
+Because the algorithm is greedy, we are not assured a global minimum. To circumvent this,
+one runs the algorithm multiple times from different initial values and then selects
+the combinations of clusters that minimizes the objective function. 
+
+### Choosing K
+
+If we have no prior knowledge about how to choose $K$, we need to decide. To do this,
+first define
+
+\begin{align*}
+  SS_{TOT} = \sum_{i=1}^n(x_i-\bar{x})^2, \quad \bar{x}=n^{-1}\sum_{i=1}^n x_i.
+\end{align*}
+
+This is total sum of squares. Similarly, the withing cluster sum of squares is
+
+\begin{align*}
+SS_{W_k} = \sum_{i\in C_k}(x_i-\bar{x}_k)^2, \quad \bar{x}_k = |C_k|^{-1}\sum_{i\in C_k}x_i
+\end{align*}
+
+Hence the total sum of squares withing cluster is given by $SS_W = \sum_{k=1}^K SS_{W_k}$.
+We can then calculate the ratio of $SS_W$ and $SS_{TOT}$, that is, calculate the
+total variation inside the clusters to the case if we had made no clusters at all. 
+This is defined as PVE, the percentage of variance explained;
+
+\begin{align*}
+  PVE=\frac{SS_W}{SS_{TOT}}.
+\end{align*}
+
+The general idea is then to plot the value of the PVE against the number of clusters
+made, and use the elbow method/scree plot to decide on the number of clusters. 
+It is also important to standardize the data before hand, because the K-means is
+sensitive to units of measurements and outliers. 
+
+# Hierarchical clustering
+
+The way Hierarchical clustering works is by iteratively diving the data into nested
+sub-clusters. Hence this algorith does not suffer from deciding a number of clusters.
+There are two types of hierarchical clustering;
+
+#### Agglomerative 
+Starts with each observation defining its own cluster and joining
+the most similar ones.
+
+#### Divise 
+Starts with one cluster and splits recursively the least homogeneous
+cluster into sub-clusters
+
+The algorithm for the agglomerative hierarchical clustering is given by
+
+1. Start with the $n$ observations, define a dissimilarity measure, e.g. eucedian
+distance, and treat each observation as its own cluster
+2. Examine all pairwise inter-cluster dissimilarities among the $j$ clusters and
+identify the pair of clusters that are most similar. Fuse these clusters. The
+dissimilarity between these two clusters indicates the height in the dendogram at
+which the fusion should be placed. 
+3. Compute the new pairwise inter-cluster dissimilarities among the $j-1$ remaning
+clusters. 
+4. Repeat 2-3 for $j=n,n-1,\ldots,2$.
+
+### Linkage
+
+It is important to specify how to measure dissimilarity between clusters when there
+are multiple points present in each cluster. There are multiple ways to do this.
+This is called linkage. 
+
+##### Complete
+The largest pairwise dissimilarity between clusters' members
+
+##### Single
+The smallest pairwise dissimilarity between clusters' members
+
+##### Average
+The mean of all the pairwise dissimilarities between clusters' members
+
+##### Centroid
+Dissimilarity between clusters' centroids. Inversion can occur if this is used,
+because the e.g. the distance between two points inside a cluster is larger than
+the distance from that cluster to a new observation, because we introduce a new 
+point to measure the distance, i.e. the centroid. 
+
+# Practical Application of these on the Iris data set 
+
+Assume that we do not know that there are 3 species of flowers. Lets make use of
+the elbow method to decide of the amount of clusters to use in K-means.
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+data("iris")
+
+Dat <- iris %>% select(-Species)
+head(Dat)
+
+Albuen <- c()
+for (i in 1:5) {
+  tmp <- kmeans(Dat, i)
+  Albuen[i] <- tmp$tot.withinss/tmp$totss
+}
+Albue_Plot <- tibble(PVE = Albuen, Clusters = seq_along(PVE))
+
+ggplot(data = Albue_Plot, mapping = aes(x = Clusters, y = PVE)) +
+  geom_point()
+
+#From the elbow method, we would most likely be satisfied with 2 clusters, when
+#in reality, 3 clusters are present in the data. It is arguable that 3 clusters
+#should be chosen according to the plot, but that is up to the individual. 
+
+```
+
