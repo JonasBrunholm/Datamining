@@ -1,4 +1,4 @@
----
+u---
 title: "Disposition_2_Shrinkage"
 output: html_document
 ---
@@ -81,6 +81,15 @@ Setting this equal to $0$ and solving for $\beta$ yields
 
 \end{align*}
 
+or alternatively
+
+\begin{align}
+
+\hat{\beta}^{Ridge}_k = \frac{(n^{-1}x^T_kx_k)^{-1}(n^{-1}x_k^Tr_k)}{1+\lambda}
+
+\end{align}
+
+
 * Efficient.
 
 * Close to linear dependency in the X matrix.
@@ -145,12 +154,28 @@ Lastly we can use the soft-threshold operator: $S_\lambda(x)=Sign(x)(|x|-\lambda
 a more convenient expression.
 
 \begin{align}
-\hat{\beta}_k^{Lasso} = S_\lambda(r_k^Tx_k/n)\left(x_k^Tx_k/n \right)^{-1}
+\hat{\beta}_k^{Lasso} = S_\lambda(r_k^Tx_k/n)\left(x_k^Tx_k/n \right)^{-1},
 \end{align}
+
 
 Thus we have an expression for $\beta_k$ in the Lasso method.
 
-glmnet
+### Elastic net
+
+* Combination of Ridge and Lasso
+
+\begin{align*}
+
+\sum_{i=1}^n\left(y_i-\beta_0-\sum_{j=1}^p\beta_jx_{i,j}\right)^2 + \lambda \sum^p_{j=1}\left(\alpha|\beta_j| + (1-\alpha)\beta_j^2\right)
+
+\end{align*}
+
+\begin{align}
+\beta_k^{Elastic} = \frac{S_{\lambda\alpha}(n^{-1}x_k^Tr_k)}{(n^{-1}x^T_kx_k)(1+\lambda(1-\alpha))}
+
+\end{align}
+
+* Uses
 
 
 
