@@ -1,7 +1,8 @@
 ---
 title: "Topic 1; Clustering: K-means, Hierarchical Clustering"
 output: html_document
-author: Jonas Mikkelsen
+date: "28/5/2021"
+author: "Jonas Mikkelsen"
 ---
 
 ```{r setup, include=FALSE}

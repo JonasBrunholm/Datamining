@@ -1,0 +1,323 @@
+---
+title: "Topic 2; Shrinkage: Lasso, Ridge Regression, Elastic Net"
+author: "Jonas Mikkelsen"
+date: "28/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Shrinkage 
+
+When increasing the number of explanatory variables in the case of a small number
+of observations, it can have a severe effect on the estimates due to high correlation.
+
+The idea behind shrinkage is that we fit a model involving all predictors, but
+then shrink the coefficients towards zero in order to reduce the variance. 
+
+As an example, consider 
+
+\begin{align*}
+\begin{bmatrix}
+x_1 \\
+x_2 \\
+\end{bmatrix}
+\sim \mathcal{N}\left(\begin{bmatrix}
+0\\
+0\\
+\end{bmatrix},
+\begin{bmatrix}
+1 & \sigma\\
+\sigma & 1\\
+\end{bmatrix}
+\right),\quad y = x_1-x_2+u,\quad u\sim\mathcal{N}(0,1)
+\end{align*}
+
+Now estimate $y=\beta_1x_1+\beta_2x_2+\varepsilon$. Then
+
+\begin{align*}
+Var
+\begin{bmatrix}
+\hat{\beta}_1 \\
+\hat{\beta}_2\\
+\end{bmatrix}
+ = \sigma_\varepsilon^2 
+\begin{bmatrix}
+\frac{1}{1-\sigma^2}\\
+\frac{1}{1-\sigma^2}\\
+\end{bmatrix}
+\end{align*}
+
+To show this, recall that $\hat{\beta}=\begin{bmatrix} \hat{\beta}_1\\ 
+\hat{\beta}_2\\ \end{bmatrix} = (X^TX)^{-1}X^Ty$ and 
+$Var(\hat{\beta}) = \sigma_\varepsilon^2(X^TX)^{-1}$. So to compute the variance,
+we need to compute $(X^TX)^{-1}$. Thus
+
+\begin{align*}
+X^TX &= \begin{bmatrix} x_1 & x_2 \end{bmatrix}^T \begin{bmatrix} x_1 & x_2\end{bmatrix}\\
+& = \begin{bmatrix} x_1^T \\ x_2^T \\ \end{bmatrix} \begin{bmatrix} x_1 & x_2 \end{bmatrix}\\
+& = \begin{bmatrix} x_1^Tx_1 & x_1^Tx_2 \\ x_2^Tx_1 & x_2^Tx_2\\ \end{bmatrix}\\
+\end{align*}
+
+which entails by the use of the determinant formula
+
+\begin{align*}
+(X^TX)^{-1} = \begin{bmatrix} x_2^Tx_2 & -x_1^Tx_2 \\ -x_2^Tx_1 & x_1^Tx_1\\ \end{bmatrix}
+\frac{1}{(x_1^Tx_1)(x_2^Tx_2)-(x_1^Tx_2)^2}
+\end{align*}
+
+where we used the fact that $(x_1^Tx_2)^T=x_2^Tx_1$ and they are scalars. Hence
+
+\begin{align*}
+Var(\hat{\beta}_1) &= \frac{x_2^Tx_2}{(x_1^Tx_1)(x_2^Tx_2)-(x_1^Tx_2)^2}\\
+&=\frac{1}{x_1^Tx_1-\frac{(x_1^Tx_2)^2}{x_2^Tx_2}}\\
+&=\frac{1}{1-\frac{(x_1^Tx_2)^2}{x_1^Tx_1x_2^Tx_2}}
+\end{align*}
+
+Now noting that $(x_1^Tx_2)$ approaches the covariation between $x_1$ and $x_2$,
+and $x_2^Tx_2$ approaches the variance of $x_2$, while $x_1^Tx_1$ approaches the 
+variance of $x_1$, we get that the fraction approaches the correlation squared. 
+Hence 
+
+\begin{align*}
+Var(\hat{\beta}_1) = \frac{1}{1-\sigma^2}.
+\end{align*}
+
+Similar results can be obtained for the variance of $\hat{\beta}_2$. This shows
+that the variance of our estimates increases if the correlation between the columns
+of our data is high. 
+
+Returning to the original problem, shrinkage is done by imposing a penalty by
+the size of the estimated parameters. 
+
+## Ridge regression
+
+Rigde regression imposes a penalty to the coefficients by their $\ell_2$ norm, i.e.
+rigde regression minimizes 
+
+\begin{align*}
+\sum_{i=1}^n(y_i-\beta_0-\sum_{j=1}^p\beta_jx_{i,j})^2+\lambda\sum_{j=1}^p\beta_j^2
+= RSS + \lambda\sum_{j=1}^p\beta_j^2
+\end{align*}
+
+$\lambda$ is known as a tuning parameter that needs to be determined seperately.
+Notice that $\beta_0$ is not being penalized. The extra term is called the shrinkage
+penalty. If $\lambda = 0$, then no penalty exists and we have ordinary linear
+regression. If $\lambda\rightarrow \infty$, the coefficients are forced to $0$,
+and the estimate collapses to the mean value. 
+
+It is possible to solve ridge analytically. In matrix form, we thus want to minimize
+
+\begin{align*}
+RSS(\lambda) = (Y-X\beta)^T(Y-X\beta)+\lambda\beta^T\beta
+\end{align*}
+
+Let the lagrange function be defined as $\mathcal{L} = RSS(\lambda)$. Then we have
+
+\begin{align*}
+\mathcal{L}(\beta) = Y^TY-Y^TX\beta-\beta^TX^TY+\beta^TX^TX\beta+\lambda\beta^T\beta
+\end{align*}
+
+Taking the derivative w.r.t. $\beta$ and equating to $0$ yields
+
+\begin{align*}
+\frac{\partial L}{\partial \beta} = -2 Y^TX+2\beta^TX^TX+2\lambda\beta^T &= 0\\
+\Updownarrow\\
+\beta^TX^TX+\lambda\beta^T &= Y^TX\\
+\Updownarrow\\
+\beta^T &= Y^TX(X^TX+\lambda I)^{-1}\\
+\Updownarrow\\
+\hat{\beta}^R &= (X^TX+\lambda I)^{-1}X^TY
+\end{align*}
+
+This is OLS regression if we remove the $\lambda I$ term. Ridge also helps with 
+non-invertability of $X^TX$. If the columns are linear dependent or close to,
+this matrix is not invertable, but since we add the scaled identity to the term,
+it is always invertable, because we just add $\lambda$ to the diagonal. 
+
+### Considerations
+
+In linear regression, different scales in variables are absorbed into the estimated
+parameters. This is not the case for shrinkage methods. Hence it is necessary to 
+standardize the explanatory variables before applying ridge regression. 
+
+The tuning parameter, $\lambda$, is usually determined by cross-validation.
+
+## Lasso 
+
+Lasso is similar to Ridge, but instead of imposing an $\ell_2$ penalty, it 
+imposes an $\ell_1$ penalty. Hence, lasso minimizes
+
+\begin{align*}
+\sum_{i=1}^n(y_i-\beta_0-\sum_{j=1}^p\beta_jx_{i,j})^2+\lambda\sum_{j=1}^p|\beta_j|
+= RSS + \lambda\sum_{j=1}^p|\beta_j|
+\end{align*}
+
+$\lambda$ is once again a tuning parameter, determined separately. If $\lambda = 0$,
+we have the ordinary linear regression, if $\lambda\rightarrow \infty$, the 
+coefficients are forced to $0$ and we get the mean. 
+
+The main difference here is that lasso can actually make coefficients exactly $0$,
+meaning that it can be used to remove columns from a data set. On the other hand,
+ridge was nice because it have closed form solutions for the estimates. This is
+not the case for lasso, because the function $x\mapsto |x|$ is not differentiable
+at $0$. As a result, we must use subdifferentials. 
+
+For simplification, we solve for one parameter at a time, holding the rest constant.
+Then move on to the second parameter, etc. Called cordinate descent, similar to
+a greedy algorithm. 
+
+The first step is to solve for the intercept, which implies that we demean the 
+data. If we think about RSS as just a function of $\beta_0$, then we get that
+
+\begin{align*}
+RSS(\beta_0) = \sum_{i=1}^N(y_i-\beta_0-\sum_{j=1}^px_{i,j}\beta_j)^2.
+\end{align*}
+
+Because $\beta_0$ does not appear in the penalty term. Then 
+
+\begin{align*}
+\frac{\partial RSS}{\partial \beta_0} = 2\sum_{i=1}^N(y_i-\beta_0-\sum_{j=1}^px_{i,j}\beta_j) = 0
+\end{align*}
+
+which implies $\hat{\beta_0} = \frac{1}{N}\left(\sum_{i=1}^Ny_i-\sum_{j=1}^px_{i,j}\beta_j\right)
+= \bar{y}-\sum_{j=1}^p\bar{x}_j\beta_j$. Then after demeaning,
+coordinate descent are looking to minimize
+
+\begin{align*}
+\frac{1}{2N}\sum_{i=1}^N\left(y_i-\sum_{j=1}^p x_{i,j}\beta_j\right)^2+\lambda\sum_{j=1}^p
+|\beta_j|
+\end{align*}
+
+Assume that we are looking for the $k'th$ parameter, $1\leq k\leq p$. If we let
+$\mathcal{L} = \frac{1}{2N}\sum_{i=1}^N\left(y_i-\sum_{j=1}^p x_j\beta_j\right)^2+\lambda\sum_{j=1}^p
+|\beta_j|$, then we get that 
+
+\begin{align*}
+\frac{\partial L}{\partial\beta_k} &= \frac{1}{N}\sum_{i=1}^N (y_i-\sum_{j=1}^p
+x_{i,j}\beta_j)(-x_{i,k}) + \lambda \frac{\partial}{\partial\beta_k}|\beta_k|\\
+&= -\frac{1}{N}\sum_{i=1}^N x_{i,k}(y_i-\sum_{j\neq k}\beta_jx_{i,j}-\beta_kx_{i,k})
++ \lambda \frac{\partial}{\partial\beta_k}|\beta_k|\\
+&= -\frac{1}{N}\sum_{i=1}^N x_{i,k}(y_i-\sum_{j\neq k}\beta_jx_{i,j})
++ \frac{1}{N}\beta_k\sum_{i=1}^N x_{i,k}^2 + \lambda \frac{\partial}{\partial\beta_k}|\beta_k|\\
+&= -\frac{1}{N}\sum_{i=1}^N x_{i,k}r_{i,k}+ \frac{1}{N}\beta_k\sum_{i=1}^N x_{i,k}^2 + 
+\lambda \frac{\partial}{\partial\beta_k}|\beta_k|\\
+&= -\frac{1}{N} x_k^T r_k +\frac{1}{N}\beta_k x_{k}^T x_k + \lambda \frac{\partial}{\partial\beta_k}|\beta_k|\\
+\end{align*}
+
+What is left is the subdifferential. Hence
+
+\begin{align*}
+\lambda \frac{\partial}{\partial\beta_k}|\beta_k| = \begin{cases}
+-\lambda, & \text{if } \beta_k < 0\\
+[-\lambda,\lambda], & \text{if } \beta_k = 0\\
+\lambda, & \text{if } \beta_k > 0
+\end{cases}
+\end{align*}
+
+this yields that 
+
+\begin{align*}
+\frac{\partial L}{\partial\beta_k} = \begin{cases}
+-\frac{1}{N} x_k^T r_k +\frac{1}{N}\beta_k x_{k}^T x_k - \lambda & \text{if } \beta_k < 0\\
+[-\frac{1}{N} x_k^T r_k-\lambda, -\frac{1}{N} x_k^T r_k+\lambda] & \text{if } \beta_k = 0 \\
+-\frac{1}{N} x_k^T r_k +\frac{1}{N}\beta_k x_{k}^T x_k + \lambda & \text{if } \beta_k > 0
+\end{cases}
+\end{align*}
+
+Each of these cases must be equated to $0$. For the first one we get that
+
+\begin{align*}
+\beta_k = (\frac{1}{N}x_k^Tr_k+\lambda)(\frac{1}{N}x_k ^T x_k)^{-1}
+\end{align*}
+
+this happens if $\beta_k < 0$, which is when $\frac{1}{N}x_k^T r_k < -\lambda$. Similar
+results can be done for the other cases, which yields 
+
+\begin{align*}
+\hat{\beta_k} = \begin{cases}
+(\frac{1}{N}x_k^Tr_k+\lambda)(\frac{1}{N}x_k ^T x_k)^{-1} & \text{if } 
+\frac{1}{N}x_k^T r_k < -\lambda\\
+0 &  \text{if } -\lambda\leq \frac{1}{N}x_k^Tr_k\leq \lambda\\
+(\frac{1}{N}x_k^Tr_k-\lambda)(\frac{1}{N}x_k ^T x_k)^{-1} & \text{if } 
+\frac{1}{N}x_k^T r_k > \lambda\\
+\end{cases}
+\end{align*}
+
+This can also be expressed using the soft-threshold operator defined as 
+$S_\lambda(z) = sign(z)(|z|-\lambda)^+$. Consequently,
+
+\begin{align*}
+  \hat{\beta}_k = (\frac{1}{N}x_k^T x_k)^{-1} S_\lambda(\frac{1}{N}x_k^T r_k)
+\end{align*}
+
+
+
+### Considerations
+
+Lasso is also affected by scaling of explanatory variables. Standardize should
+be considered. Lasso makes variable selection by putting some variables equal to
+zero. Helps with model interpretability. 
+
+## Elastic Net
+
+A combination of Ridge and Lasso. The idea is the same as previosly, but Elastic
+net combines the two methods. Hence, it looks to minimize the function
+
+\begin{align*}
+\sum_{i=1}^N(y_i-\beta_0-\sum_{j=1}^p\beta_jx_{i,j})^2+\lambda\sum_{j=1}^p
+(\alpha |\beta_j|+(1-\alpha)\beta_j^2)
+\end{align*}
+
+$\lambda,\alpha$ are tuning parameters determined seperately. Shrinkage pentalty
+is a combination (weighted average) of the penalties for ridge and lasso. 
+Elastic net selects variables just like lasso, and also shrinks the coefficients
+of correlated predictors like in the rigde. Assume once again that we have 
+demeaned the data. Hence we instead look at 
+
+\begin{align*}
+\mathcal{L} = \frac{1}{2N}\sum_{i=1}^N(y_i-\sum_{j=1}^p\beta_jx_{i,j})^2+\lambda\sum_{j=1}^p
+(\alpha |\beta_j|+\frac{1}{2}(1-\alpha)\beta_j^2)
+\end{align*}
+
+We now try to find the derivative of the $k'th$ $\beta$. The procedure is the same
+as in lasso. Thus
+
+\begin{align*}
+\frac{\partial \mathcal{L}}{\partial\beta_k} &= -\frac{1}{N}\sum_{i=1}^Nx_{i,k}(y_i-
+\sum_{j=1}^p\beta_jx_{i,j}) + \lambda\alpha \frac{\partial}{\partial\beta_k}|\beta_k|
++\lambda(1-\alpha)\beta_k\\
+&= -\frac{1}{N}x_k^Tr_k+\frac{1}{N}\beta_kx_k^Tx_k+\lambda\alpha \frac{\partial}{\partial\beta_k}|\beta_k|
++\lambda(1-\alpha)\beta_k\\
+\end{align*}
+
+Hence when equating to zero and solving for $\beta_k$ yields
+
+\begin{align*}
+\hat{\beta}_k = \begin{cases}
+(\frac{1}{N}x_k^Tr_k+\lambda\alpha)\frac{1}{\lambda(1-\alpha)}(\frac{1}{N}
+x_k^T x_k)^{-1} & \text{if } \frac{1}{N}x_k^Tr_k < -\lambda\alpha\\
+\hat{\beta}_k = 0 & \text{if } -\lambda\alpha\leq\frac{1}{N}x_k^Tr_k\leq\alpha\lambda\\
+\hat{\beta}_k = (\frac{1}{N}x_k^Tr_k-\lambda\alpha)\frac{1}{\lambda(1-\alpha)}(\frac{1}{N}
+x_k^T x_k)^{-1} & \text{if } \frac{1}{N}x_k^Tr_k > \lambda\alpha\\
+\end{cases}
+\end{align*}
+
+Or by use of the soft-threshold operator,
+
+\begin{align*}
+  \hat{\beta_k} = (\frac{1}{N}x_k^Tx_k)\frac{1}{\lambda(1-\alpha)}S_{\lambda,\alpha}
+  (\frac{1}{N}x_k^Tr_k)
+\end{align*}
+
+### Extensions
+
+Shrinkage can also be applied to classification problems (e.g. Neural Networks)
+by properly adjusting the optimization problem. This can be done by restricting
+some of the parameters. For example, in logistic regression, lasso maximizes 
+
+\begin{align*}
+\sum_{i=1}^N(y_iX_i\beta-\log(1+e^{X_i\beta}))-\lambda\sum_{j=1}^p|\beta_j|
+\end{align*}
