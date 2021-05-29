@@ -1,0 +1,183 @@
+u---
+title: "Disposition_2_Shrinkage"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(glmnet)
+
+```
+
+For extending the linear regression there are two goals to pursue:
+
+* To make the model easier to interpret.
+
+* To shrink or constrain the variables, thus decreasing the variance and at the cost of a neglegable increase in bias.
+
+It is common to have a lot of different explanatory variables. There are $3$ main ways of handling them
+
+* Subset Selection.
+
+* Dimensionality reduction.
+
+* Shrinkage.
+
+There are two main ways to do shirnkage: **Ridge regression** and **Lasso**.
+
+* The idea.
+
+* smaller range of variation.
+
+* Ridge and Lasso vary by the way the penalty is imposed.
+
+### Ridge Regression
+
+\begin{align*}
+
+\sum_{i=1}^n(y_i - \beta_0 - \sum_{j=1}^p\beta_jx_{j,i})^2 + \lambda 
+\sum_{j=1}^p \beta_j^2 = RSS + \lambda \sum_{j=1}^p \beta_j^2
+
+\end{align*}
+
+* Tuning parameter
+
+* Penalty term
+
+* $\lambda \to 0$ 
+
+To obatin a way to calculate the $\beta$ values for Ridge regression, define
+
+\begin{align*}
+
+RSS(\lambda) = (Y-X\beta)^T(Y-X\beta) + \lambda\beta^T\beta
+
+\end{align*}
+
+Use Lagrange with $\mathcal{L}=RSS(\lambda)$ to obtain $\partial \mathcal{L}
+/ \partial \beta=0$;
+
+\begin{align*}
+
+\mathcal{L}&=(Y-X\beta)^T(Y-X\beta) + \lambda\beta^T\beta\\ 
+&= Y^TY-Y^TX\beta-\beta^TX^TY+\beta^TX^TX\beta+\lambda \beta^T\beta\\
+&= Y^TY-2Y^TX\beta+\beta^TX^TX\beta+\lambda \beta^T\beta,
+
+\end{align*}
+
+which implies
+
+\begin{align*}
+
+\frac{\partial \mathcal{L}}{\partial \beta} = -2Y^TX+2X^TX\beta+2\lambda \beta.
+
+\end{align*}
+
+Setting this equal to $0$ and solving for $\beta$ yields
+
+\begin{align*}
+
+\hat{\beta}^{Ridge} = (X^TX + \lambda I)^{-1}X^TY
+
+\end{align*}
+
+or alternatively
+
+\begin{align}
+
+\hat{\beta}^{Ridge}_k = \frac{(n^{-1}x^T_kx_k)^{-1}(n^{-1}x_k^Tr_k)}{1+\lambda}
+
+\end{align}
+
+
+* Efficient.
+
+* Close to linear dependency in the X matrix.
+
+* Scaling (In the normal OLS the scaling disappears due to $\frac{x^Ty}{x^Tx}$,this is not the case for RR)
+
+* The value of the tuning parameter is chosen by cross-validation with values in a grid.
+
+* **Maybe show the scaled vs unscaled in a plot**
+
+### Lasso
+
+\begin{align*}
+
+\sum_{i=1}^n(y_i - \beta_0 - \sum_{j=1}^p\beta_jx_{j,i})^2 + \lambda \sum_{j=1}^p |\beta_j| = RSS + \lambda \sum_{j=1}^p |\beta_j|
+
+\end{align*}
+
+* A key difference is that $\beta$ values are allowed to be $0$.
+
+* The $\beta$ is found by Lagrange, like Ridge:
+
+\begin{align*}
+
+\mathcal{L} = \frac{1}{2}RSS + \lambda \sum_{j=1}^p |\beta_j|.
+
+\end{align*}
+
+Thus
+
+\begin{align*}
+
+\frac{\partial \mathcal{L}}{\partial \beta_k} &= \frac{1}{n}\sum_{i=1}^n(y_i - \beta_0 - \sum_{j=1}^p\beta_jx_{j,i})(-x_{k,i})+\lambda \partial |\beta_k|\\
+&= \frac{1}{n}\sum_{i=1}^n(y_i - \beta_0 - \sum_{j\neq k}\beta_jx_{j,i}+\beta_k x_{k,j})(-x_{k,i})+\lambda \partial |\beta_k|\\
+&= \frac{1}{n}\sum_{i=1}^n -r_{k,i}x_{k,i} + \frac{1}{n}\sum_{i=1}^n \beta_k x_k^2 + \lambda \partial |\beta|\\
+&= -\frac{1}{n}r^Tx_k + \frac{1}{n}\beta_k x^T_k x_k + \lambda \partial |\beta_k|
+
+\end{align*}
+
+Next we set $\frac{\partial \mathcal{L}}{\partial \beta_k} = 0$ which then yields
+
+\begin{align*}
+0 = \begin{cases}
+-\frac{1}{n}r^Tx_k + \frac{1}{n}\beta_k x^T_k x_k - \lambda, \quad \text{if $\beta_k < 0$}\\
+\left[-\frac{1}{n}r^Tx_k - \lambda\ ,\  -\frac{1}{n}r^Tx_k + \lambda\right], \quad \text{if $\beta_k = 0$}\\
+-\frac{1}{n}r^Tx_k + \frac{1}{n}\beta_k x^T_k x_k + \lambda, \quad \text{if $\beta_k > 0$}
+\end{cases}
+\end{align*}
+
+We then need to isolate $\beta$ which in turn gives
+
+\begin{align*}
+
+\hat{\beta}_k = \begin{cases}
+\left(r_k^Tx_k/n + \lambda\right)\left(x_k^Tx_k/n \right)^{-1}, \quad \text{if } r_k^Tx_k/n<-\lambda \\
+ 0, \quad\quad\quad\quad\quad\quad\quad\quad\quad\quad \quad \: \ \text{if } 0\in [r_k^Tx_k/n - \lambda\ ,\ r_k^Tx_k/n + \lambda]\\
+\left(r_k^Tx_k/n - \lambda\right)\left(x_k^Tx_k/n \right)^{-1}, \quad \text{if } r_k^Tx_k/n>\lambda
+\end{cases}
+
+\end{align*}
+Lastly we can use the soft-threshold operator: $S_\lambda(x)=Sign(x)(|x|-\lambda)_+$ for
+a more convenient expression.
+
+\begin{align}
+\hat{\beta}_k^{Lasso} = S_\lambda(r_k^Tx_k/n)\left(x_k^Tx_k/n \right)^{-1},
+\end{align}
+
+
+Thus we have an expression for $\beta_k$ in the Lasso method.
+
+### Elastic net
+
+* Combination of Ridge and Lasso
+
+\begin{align*}
+
+\sum_{i=1}^n\left(y_i-\beta_0-\sum_{j=1}^p\beta_jx_{i,j}\right)^2 + \lambda \sum^p_{j=1}\left(\alpha|\beta_j| + (1-\alpha)\beta_j^2\right)
+
+\end{align*}
+
+\begin{align}
+\beta_k^{Elastic} = \frac{S_{\lambda\alpha}(n^{-1}x_k^Tr_k)}{(n^{-1}x^T_kx_k)(1+\lambda(1-\alpha))}
+
+\end{align}
+
+* Uses
+
+
+
+
