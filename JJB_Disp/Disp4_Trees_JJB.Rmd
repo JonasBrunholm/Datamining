@@ -18,9 +18,7 @@ library(rpart)
  plot_bike1$atemp <- plot_bike1$atemp*51
  
  ggplot(data=plot_bike1, aes(x=atemp,y=cnt)) + 
-   geom_point() +
-   geom_line(aes(y=mean(cnt)),colour = "red", size = 1)#+
-  geom_segment(aes(x=0,xend = 10,y=mean(cnt[1:100]),yend=mean(cnt[1:100])))
+   geom_point() 
   
 model_1 <- rpart(cnt ~ atemp,data=plot_bike1)
 par(mar=c(1,1,1,1))
@@ -82,4 +80,59 @@ Algorithm for CART:
 1. Use K-fold cross validation to choose $\alpha$.
 
 1. Return the tree for the chosen $\alpha$.
+
+* Trees work for classification aswell
+
+** Gini, Missclasification error, Cross-entropy
+
+* Trees are unstable. One unlucky cut affects the rest of the cuts.
+
+* Overfitting
+
+* Linearity
+
+### Bootstrap Aggregation, Bagging
+
+General procedure for reducing the variance of an algorithm. Ideally we would like to have many random samples, then averaging the results from those trees, however that mush data is often unfeasable, thus we rely on bootstrapping.
+
+The bagging algoritm is like so:
+
+1. Take the bootstrap sample, i.e. a random sample of size $n$ with replacement.
+
+1. Construct a usual tree without pruning
+
+1. Assign a class or value to each of the terminal nodes.
+
+1. Repeat step $1$ to $3$ $B$ times.
+
+1. For each observation, count the number of times over that it is classified in each category, or the average.
+
+1. Assign each observation to a final class by a majority vote, or the average, over the set of trees.
+
+Specifically we calculate $B$ trees, $\hat{f}^1(x),\ldots,\hat{f}^B(x)$, using the bootstrap sampels.
+Then the majority vote is used for classification:
+
+\begin{align}
+\hat{f}_{vote}(x)= \arg\underset{k}{\max}\ \sum_{j=1}^B \mathbf{1} (\hat{f}^j(x)=k). 
+\end{align}
+
+For regression we use the average:
+
+\begin{align}
+\hat{f}_{avg}(x)= \frac{1}{B}\sum_{j=1}^B\hat{f}^j(x). 
+\end{align}
+
+The value of $B$ needs to be large enough that the error is somewhat minimized.
+
+For each observation, we will generally not have used all of the data, thus we can predict its response using trees that have been constructed without it. This is out-of-bag error estimation.
+
+Bagging increases the accuracy, however we do not have a tree at the end, and thus we loose some of the convenience of the CART.
+
+Measures of variable importance can be constructed using the total amount the RSS or 
+Gini reduces due to split in a variable. 
+
+### Random forrest
+
+The idea is the same as for Bagging, however we want to consider a subset of the explanatory variables.
+
 
