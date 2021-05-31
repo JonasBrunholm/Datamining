@@ -83,7 +83,7 @@ Algorithm for CART:
 
 * Trees work for classification aswell
 
-** Gini, Missclasification error, Cross-entropy
+* * Gini, Missclasification error, Cross-entropy
 
 * Trees are unstable. One unlucky cut affects the rest of the cuts.
 
@@ -134,5 +134,29 @@ Gini reduces due to split in a variable.
 ### Random forrest
 
 The idea is the same as for Bagging, however we want to consider a subset of the explanatory variables.
+
+1. Take a bootstrap sample
+
+1. Take a random sample without replacement of size $m$ of the predictors.
+
+1. Construct the first partition of the data
+
+1. Repeat step 2. for each subsequent split, until the tree is sufficiently large. Assign a class to each terminal node.
+
+1. Repeat step 1. to 4. $B$ times.
+
+1. Assign each case to a category by a major vote over the set of trees.
+
+### Boosting
+
+Combine many weak classifiers to produce a powerful committee.
+
+No restriction of the training sample, or the parameters. The misclassified or poorly fitted
+values are given more weight. The final fitted values are a linear combination of at large set of earlier fitting attempts.
+
+
+
+
+
 
 
