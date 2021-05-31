@@ -7,7 +7,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(rpart)
-
+suppressMessages(library(randomForest))
+suppressMessages(library(gbm))
 ```
 
 ### Classification and Regression Tree (CART)
@@ -153,6 +154,84 @@ Combine many weak classifiers to produce a powerful committee.
 
 No restriction of the training sample, or the parameters. The misclassified or poorly fitted
 values are given more weight. The final fitted values are a linear combination of at large set of earlier fitting attempts.
+
+1. Set $\hat{f}(x)=0$ and thus thus $r_i=y_i$ for all $i$ in the training set.
+
+1. For $b=1,\ldots, B$ repeat
+
+    + Fit a tree $\hat{f}^b(x)$ with $d$ splits to the training data $(X,r)$
+
+    + Update $\hat{f}(x) \leftarrow \hat{f}(x)+\lambda \hat{f}^b(x)$
+    
+    + Update $r_i \leftarrow r_i - \lambda\hat{f}^b(x_i)$
+
+1. Output the boosted model,
+
+\begin{align}
+\hat{f}(x)=\sum_{b=1}^B \lambda \hat{f}^b(x).
+\end{align}
+
+#### Considerations
+
+For boosting there are 3 tuning parameters
+
+The number of trees are equal to $B$. Since we are modelling the residuals and not another random tree, increasing $B$ can maybe cause overfitting, although the overfitting tends to be slow. Usually $B$ is selected by cross validation. 
+
+The shrinkage parameter, $\lambda$, controls the learning rate. Typically $lambda = 0.01$ or $\lambda = 0.001$ are used, where smaller values of $\lambda$ require a higher $B$.
+
+The number of splits $d$ in each tree controls the complexity of the collected trees. Often $d=1$ works well.
+
+Boosting is designed to improve weak learners, for strong learners boosting tends not to do much. Boosting cannot falued values or poor data selection, as for most other algorithms. Boosing a bad model will not make it better.
+
+### Practical uses
+
+Going to work with BikeData. There are two data sets. First, the one with daily 
+data is used. Only some variables are used. 
+
+```{r}
+day <- Data_Bike_share_day
+data <- day %>% select(cnt, atemp, hum, windspeed, season, holiday, workingday, weathersit)
+head(data)
+
+#CART
+par(mar=c(1,1,1,1))
+mod <- rpart(cnt ~ ., data = data, method = "anova")
+plot(mod)
+text(mod)
+
+#Looks like atemp, season, hum & windspeed has an influence. Windspeed not so much.
+#Holiday, workingday, weathersit does not mean anything according to the tree.
+
+####Bagging####
+par(mar=c(5,5,5,5))
+set.seed(69)
+mod <- randomForest(cnt ~ ., data = data, mtry = 7) #500 replications
+varImpPlot(mod) # The same variables  are chosen again
+
+####Random Forest####
+mod <- randomForest(cnt ~ ., data = data) #p/3 variables sampled each time, 500
+#replications
+varImpPlot(mod) #The order of importance changes. Not the bottom ones tho. 
+
+mod <- randomForest(cnt ~ ., data = data, mtry = 5)
+varImpPlot(mod)
+
+#Looks like the 4 most important variables are the same each time. 
+
+mod <- gbm(cnt ~ ., data = data, n.trees = 10000, interaction.depth = 1,
+           shrinkage = 0.01)
+
+summary(mod)
+
+mod <- gbm(cnt ~ ., data = data, n.trees = 10000, interaction.depth = 4,
+           shrinkage = 0.01)
+
+summary(mod)
+
+#Still the same variables are used each time. 
+
+
+```
 
 
 
