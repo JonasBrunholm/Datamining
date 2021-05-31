@@ -1,0 +1,138 @@
+---
+title: "Disp4_Trees_JJB"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(rpart)
+
+```
+
+### Classification and Regression Tree (CART)
+
+```{r}
+ Data_Bike_share_day <- suppressMessages(read_csv("Data_Bike_share_day.csv"))
+ plot_bike1 <- Data_Bike_share_day %>% select(atemp,cnt)
+ plot_bike1$atemp <- plot_bike1$atemp*51
+ 
+ ggplot(data=plot_bike1, aes(x=atemp,y=cnt)) + 
+   geom_point() 
+  
+model_1 <- rpart(cnt ~ atemp,data=plot_bike1)
+par(mar=c(1,1,1,1))
+plot(model_1)
+text(model_1, digits = 5)
+```
+
+We want to know were to cut, so we minimize a loss function, for example the RSS, this can be computationally heavy, thus we use a greedy approach, and try to minimize with a single cut.
+
+
+\begin{align}
+\arg\ \underset{s}{\min}\ \left(\arg\underset{c_1}{\min}\ \sum_{x_i<s} (y_i-c_1)^2 + \arg\underset{c_2}{\min}\ \sum_{x_i>s} (y_i-c_2)^2 \right)
+\end{align}
+where
+\begin{align}
+\arg\underset{c_1}{\min}\ \sum_{x_i<s} (y_i-c_1)^2 = \hat{y_1}, \quad \arg\underset{c_2}{\min}\ \sum_{x_i<s} (y_i-c_1)^2 = \hat{y_2} 
+\end{align}
+
+since we only have a single value. The cutpoint gives basis functions $b_1 (x)=\mathbf{1}(x_i<s)$ and $b_2=\mathbf{1}(x_i>s)$, thus the model we are fitting is $y_i=\beta_1b_1(x_i)+\beta_2b_2(x_i)$.
+
+After the first cut we repeat the procedure in the two new intervals and find a new cut.
+This is repeated until some stopping criteria is met, this could be number of elements, or gain in loss function.
+
+The same is the case for more variables. The problem is this
+
+\begin{align}
+\arg\ \underset{s,j}{\min}\ \left( \sum_{i|x_i\in R_1(s,j)} (y_i-\hat{y}_{R_1})^2 + \sum_{i|x_i\in R_2(s,j)} (y_i-\hat{y}_{R_2})^2 \right)
+\end{align}
+
+```{r}
+plot_bike2 <- Data_Bike_share_day %>% select(hum,atemp,cnt)
+plot_bike2$atemp <- plot_bike2$atemp*51
+ggplot(data=plot_bike2, aes(x=atemp,y=hum)) +
+  geom_point()
+
+model_2 <- rpart(cnt ~ .,data=plot_bike2)
+par(mar=c(1,1,1,1))
+plot(model_2)
+text(model_2, digits = 5)
+
+
+```
+
+If we use the stopping criteria of no major decrease in RSS, we can possibly stop too early.
+For this reason we can use pruning. We let the algorithm run until we have a big tree and then remove the cuts that has low impact on the loss function. The new problem is then where to cut the tree, this is again a hard problem to solve. Thus we use weakest link pruning:
+
+\begin{align}
+C_\alpha(T)=\sum^{|T|}_{m=1}\sum_{\{i|x_i\in R_m\}}(y_i-\hat{y}_{R_m})^2+\alpha|T|
+\end{align}
+
+where $|T|$ denotes the number of terminal nodes of the tree $T$ and $R_m$ is the region related to the $m'th$ terminal node.
+
+Algorithm for CART:
+
+1. Use recursive binary method, until only a few observations is in each group.
+
+1. Apply cost complexity pruning to obtain a sequence of best sub-trees as a function of $\alpha$.
+
+1. Use K-fold cross validation to choose $\alpha$.
+
+1. Return the tree for the chosen $\alpha$.
+
+* Trees work for classification aswell
+
+** Gini, Missclasification error, Cross-entropy
+
+* Trees are unstable. One unlucky cut affects the rest of the cuts.
+
+* Overfitting
+
+* Linearity
+
+### Bootstrap Aggregation, Bagging
+
+General procedure for reducing the variance of an algorithm. Ideally we would like to have many random samples, then averaging the results from those trees, however that mush data is often unfeasable, thus we rely on bootstrapping.
+
+The bagging algoritm is like so:
+
+1. Take the bootstrap sample, i.e. a random sample of size $n$ with replacement.
+
+1. Construct a usual tree without pruning
+
+1. Assign a class or value to each of the terminal nodes.
+
+1. Repeat step $1$ to $3$ $B$ times.
+
+1. For each observation, count the number of times over that it is classified in each category, or the average.
+
+1. Assign each observation to a final class by a majority vote, or the average, over the set of trees.
+
+Specifically we calculate $B$ trees, $\hat{f}^1(x),\ldots,\hat{f}^B(x)$, using the bootstrap sampels.
+Then the majority vote is used for classification:
+
+\begin{align}
+\hat{f}_{vote}(x)= \arg\underset{k}{\max}\ \sum_{j=1}^B \mathbf{1} (\hat{f}^j(x)=k). 
+\end{align}
+
+For regression we use the average:
+
+\begin{align}
+\hat{f}_{avg}(x)= \frac{1}{B}\sum_{j=1}^B\hat{f}^j(x). 
+\end{align}
+
+The value of $B$ needs to be large enough that the error is somewhat minimized.
+
+For each observation, we will generally not have used all of the data, thus we can predict its response using trees that have been constructed without it. This is out-of-bag error estimation.
+
+Bagging increases the accuracy, however we do not have a tree at the end, and thus we loose some of the convenience of the CART.
+
+Measures of variable importance can be constructed using the total amount the RSS or 
+Gini reduces due to split in a variable. 
+
+### Random forrest
+
+The idea is the same as for Bagging, however we want to consider a subset of the explanatory variables.
+
+
