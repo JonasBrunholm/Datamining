@@ -1,0 +1,356 @@
+---
+title: 'Topic 4; Trees: Classification and Regression Trees (CART), Bagging, Random
+  Forest, Boosting'
+author: "Jonas Mikkelsen"
+date: "30/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Trees
+
+Trees is a method that can help with the selection of appropriate basis functions.
+Trees are supervised algorithms that can be used for classification and regression.
+Tree based methods partition the sample space into hyper-rectangles and then fit
+a simple model to each. 
+
+## Classification and Regression Trees (CART)
+
+The CART output is typically displayed like a tree. Hereby the name. The algorithm
+itself needs to automatically decide on the split points for the basis functions. 
+It starts by looking for the split point that gives us the greatest increase in
+fit. That is,
+
+\begin{align*}
+\underset{s}{\min}\left(\underset{c_1}{\min}\sum_{x_i<s}(y_i-c_1)^2+\underset{c_2}
+{\min}\sum_{x_i\geq s}(y_i-c_2)^2\right)
+\end{align*}
+
+Hence, it finds the splitpoint $s$ such that the residuals are minimized before and
+after the splitpoint. Recall that because $c_1$ and $c_2$ are constants, we have
+that $\hat{y}_1 = \underset{c_1}{\min}\sum_{x_i<s}(y_i-c_1)^2$ and
+$\hat{y}_2 = \underset{c_2}{\min}\sum_{x_i\geq s}(y_i-c_2)^2$ where 
+$\hat{y}_1,\hat{y}_2$ denotes the mean values for $y_i$ such that $x_i<s$ and 
+$x_i\geq s$. Hence we only need to find the cutpoint. When this is found, we get 
+the basis function $b_1(x_i) = I(x_i<s)$ and $b_2(x_i) = I(x_i\geq s)$, where $I$
+is the indicator function. This is the same as fitting
+
+\begin{align*}
+y_i = \beta_1b_1(x_i)+\beta_2b_2(x_i)
+\end{align*}
+
+Similarly, when we have decided on the first cutpoint, we now look for a new
+cutpoint in the two separated parts of the data, find two candidates for new 
+cutpoints, and pick the ones that minimizes the most. This is repeated until
+either a fixed number of cutpoints is obtained or when the error term is not 
+improved much. 
+
+Multivariate is similar. First, obtain the first cutpoint for each of $p$ variables.
+Then pick the one that minimizes the loss function, similar to before. Procedure
+is known as recursive binary splitting. Mathematically, suppose we have $p$ 
+explanatory variables $X_1,\ldots,X_p$. Let $s$ be the cutpoint. Define
+
+\begin{align*}
+R_1(j,s) = \{X|X_j<s\},\quad R_2(j,s) = \{X|X_j\geq s\}
+\end{align*}
+
+Then the first cutpoint in CART solves
+
+\begin{align*}
+  \underset{j,s}{\min}\left(\sum_{i|x_i\in R_1(j,s)}(y_i-\hat{y}_{R_1})^2+
+  \sum_{i|x_i\in R_2(j,s)}(y_i-\hat{y}_{R_2})^2\right)
+\end{align*}
+
+where the mean has been substituted in. Process is repeated for each subregion.
+
+### Pruning
+
+A larger tree would fit the data better, while a small tree may not fit the data
+well, i.e. high bias. Bias/Variance trade off. Pruning tries to do this. It grows
+a large tree and then eliminate nodes that do not add much to the fit. 
+
+The idea is to find a subtree that leads to a lower generalization error rate. 
+With test data and a small tree, we can evaluate the error for each subtree, but
+if the tree is large, it is not efficient since there are many subtrees. To 
+overcome this, it is possible to weakest link pruning (greedy way), which introduces
+a loss-penalty formulation to pruning. 
+
+Weakest link pruning considers the optimization problem;
+
+For $\alpha\geq 0$, find the subtree that minimizes
+
+\begin{align*}
+  C_\alpha(T) = \sum_{m=1}^{|T|}\sum_{i|x_i\in R_m}(y_i-\hat{y}_{R_m})^2+\alpha|T|
+\end{align*}
+
+$|T|$ is the number of terminal nodes of tree T, $R_m$ is the region corresponding
+to the $m'th$ terminal node. $\alpha$ is a tuning parameter. Determines penalty
+of growing a larger tree. $\alpha = 0$ implies the subtree is the complete tree.
+Increasing $\alpha$ is an increase in cost of growing a large tree, such that
+small trees will be selected. 
+
+To find the optimal tree, we succesively collapse the internal node which produces
+the smallest per node increase in the loss function. Repeated until we have a 
+single node tree. Gives a sequence of subtrees. Mathematical result states
+that there exists a unique smallest subtree that minimizes cost complexity. 
+It is possible to choose $\alpha$ with a validation set or cross validation.
+
+The algorithm is thus given by;
+
+1. Use recursive binary splitting to grow a large tree on the training data.
+Stop when each terminal node has fewer than some minimum number of observations
+1. Apply cost complexity pruning to the large tree in order to obtain a sequence
+of best subtrees as a function of $\alpha$
+1. Use K-fold cross validation to choose $\alpha$. 
+1. Return the subtree from step $2$ that corresponds to the chosen value of $\alpha$. 
+
+To use this for classification, we need to modify the loss function. Usually a
+majority vote is introduced. It is possible to use missclassification error,
+gini index or cross-entropy. For pruning, missclassification is preferred. 
+
+Let $m$ present the region $R_m$ containing $N_m$ observations. Let
+
+\begin{align*}
+\hat{p}_{m,k}=\frac{1}{N_m}\sum_{x_i\in R_m}I(y_i=k)
+\end{align*}
+
+be the proportion of class $k$ observations in node $m$. We classify observations
+in $m$ to class $k(m)=\underset{k}{\arg \max}\hat{p}_{m,k}$. Loss functions given by
+
+Missclassification error: 
+
+\begin{align*}
+E = \frac{1}{N_m}\sum_{x_i\in R_m}I(y_i\neq k(m)) = 1-\hat{p}_{m,k}
+\end{align*}
+
+Gini index:
+
+\begin{align*}
+G = \sum_{k=1}^K\hat{p}_{m,k}(1-\hat{p}_{m,k})
+\end{align*}
+
+Cross-entropy:
+
+\begin{align*}
+  D = -\sum_{k=1}^K \hat{p}_{m,k}\log(\hat{p}_{m,k})
+\end{align*}
+
+G and D take small values if all $\hat{p}_{m,k}$'s are close to zero or to one. 
+
+### Considerations
+
+Tree based methods are simple, useful for interpretation. Does variable selection. 
+Can handle categorical predictors. However, trees are unstable. Some observations
+can dramatically affect which variables are selected and the precise values used
+for partitioning the data, implying that all subsequent partitions are affected.
+
+This is related to overfitting, hard to generalize the result. If the data is kind
+of linear, trees is not very useful, because they produce rectangles. On the other
+hand, trees are great if the data looks rectangular and not linear. Thus it 
+depends on the data. 
+
+## Bagging 
+
+Bagging stands for bootstrap aggregation. General purpose is reducing the variance
+of an algorithm. Because taking the average reduces the variance, we can combine
+many weak algorithms to produce a powerful committee. In the perfect world, we 
+would like to have many random samples, constructing a tree for each and the take
+the average. Eliminates the noise. Getting multiple samples is not always possible,
+so we use bootstrap. Thus bagging is the algorithm;
+
+Assume that we have training data with $n$ observations and a categorical response. 
+Then
+
+1. Take a random sample of size $n$ with replacement from the original data
+(Bootstrap sample)
+1. Construct a classification tree without pruning
+1. Assign a class to each terminal node
+1. Repeat steps 1-3 $B$ times, where $B$ is a large number
+1. For each observation in the dataset, count the number of times over trees
+that is classified in each category.
+1. Assign each observation to a final class by a majority vote over the set of 
+trees. 
+
+Hence we calculate $B$ trees, $\hat{f}^1(x),\hat{f}^2(x),\ldots,\hat{f}^B(x)$ 
+using the different bootstrap sample. For classification, a majority vote is used
+
+\begin{align*}
+\hat{f}_{avg}(x) = \underset{k}{\arg \max}\sum_{j=1}^BI(\hat{f}^j(x) = k)
+\end{align*}
+
+while taking an average for regression;
+
+\begin{align*}
+\hat{f}_{avg}(x) = \frac{1}{B}\sum_{j=1}^B\hat{f}^j(x)
+\end{align*}
+
+While overfitting is possible, the many replications reduces the variance and thus
+avoids overfitting. In practice, B is selected sufficiently large such that the
+error is low. 
+
+#### Out-of-bag error estimation
+
+When bootstrapping, approximately $2/3$ of the data is used in each sample. Out-
+of-bag error estimation, (OOB) error estimation, then predicts the response of an
+observation using the trees constructed with samples that do not contain that 
+observation. Hence OOB error estimator is a valid estimate of the test error.
+More efficient than validation set or cross-validation since it can be computed
+almost on the side when doing the bagging itself. 
+
+### Considerations
+
+Bagging results in improved accuracy over a single, but loses interpretation. It
+is no longer clear which variables is the most important, we take the average. 
+
+It is possible to compute measure of variable importance by storing the total
+amount that the RSS (Or gini index in classification) decreases due to splits for
+a given predictor. Large values then indicates an important predictor. 
+
+In practice, bagging can generate fitted values that often reproduce the data well.
+Lot of data is shared from each tree, meaning the fitted values are not independent.
+Averaging is not as effective as it can be. Still, if trees do not fit the data, 
+bagging will also be bad. 
+
+## Random Forest
+
+Random forest looks to lower the dependence in the data and predictors in all the
+fitted trees. For instance, if one predictor is really strong, then most of the 
+trees will use this strong predictor, thus similar trees, i.e. highly correlated
+trees and thus variance reduction is not as great as we want it to be. 
+Random Forest is an algorithm that improves over bagging by decorrelating the 
+predictors. The setup is the same, averaging a large number of trees, but
+random forest randomly select a subset of the predictors in each split. The algorithm
+has the form;
+
+Assume that we have training data with $n$ observations and a categorical response. 
+Then
+
+1. Take a random sample of size $n$ with replacement from the data. 
+1. Take a random sample of size $m<p$ where $p$ is the number of predictors without replacement of the predictors. 
+1. Construct the first recursive partition of the data.
+1. Repeat step 2 for each subsequent split until the tree is as large as desired.
+No pruning. Assign a class to each terminal node. 
+1. Repeat steps 1-4 $B$ times, $B$ being a large real number. 
+1. Assign each case to a category by a majority vote over the set of trees obtained. 
+
+In the case $m = p$ we have bagging again. Random forest does not overfit if we
+increase $B$, i.e. many replications. However, still no interpretation. Small $m$
+works well if many of the predictors are correlated. 
+
+## Boosting
+
+Boosting is another approach for improving the prediction of algorithms. Boosting
+is kind of similar to Bagging and Random Forest in the sense that they use many
+outputs of weak classifiers to form a powerful classifier, but fundamentally, 
+boosting is different. 
+
+At each iteration in boosting, it works with the entire data set, i.e. it uses all
+the sample and all the predictors. In each iteration, the observations that are 
+misclassified/poorly fitted are given more relative weight. This is not present
+in random forest. In the end, the final fitted values are a linear combination 
+over a large set of earlier fitting attempts, but the combination is not a simple
+average as in random forest. The algorithm is given by;
+
+1. Set $\hat{f}(x) = 0$ and $r_i = y_i$ for each $i$ in the training set. 
+1. for $b=1,\ldots, B$, do
+  + Fit a tree $\hat{f}^b$ with $d$ splits to the training data $(X,r)$, where $r$ is the residuals. 
+  + Update $\hat{f}$ by adding a shrunken version of the new tree;
+
+\begin{align*}
+\hat{f}(x) \leftarrow \hat{f}(x) + \lambda\hat{f}^b(x)
+\end{align*}
+
+  + Update residuals;
+
+\begin{align*}
+r_i \leftarrow r_i - \lambda\hat{f}^b(x_i)
+\end{align*}
+
+1. Output the boosted model 
+\begin{align*}
+\hat{f}(x) = \sum_{b=1}^B \lambda\hat{f}^b(x)
+\end{align*}
+
+Hence each fitting attempt is undertaken by a classifier using the residuals from
+the previous iteration. Hence boosting will pay relatively more attention in the
+next iteration to the cases that were poorly predicted, i.e. the ones with large
+residuals. Fitted values from each iteration are combined as a weighted sum. 
+
+Because the growth of a particular tree takes into account the previously grown
+trees, smaller trees are typically sufficient for this method. 
+
+### Considerations
+
+Boosting has three tuning parameters. 
+
+1. The number of trees $B$: Boosting can overfit if $B$ is too large. We end up
+explaining the noise if $B$ is too large.
+1. Shrinkage parameter $\lambda$: Controls the rate at which the boosting learns.
+Typically low values such as $0.01$ and $0.001$. Right choice depends on the problem.
+Very small $\lambda$ can require large values of $B$ to achieve great performance. 
+1. The number of splits $d$: Controls the complexity of the trees. $d=1$ is often
+used. Depends on the problem
+
+Boosting is designed to improve the performance of weak learners. Boosting strong
+learners do not work. Strong or weak learner depends on domain knowledge. Still,
+difficult to interpret. Cannot overcome variables which are measured poorly, or
+important predictors which has been overlooked, which means that with most algorithms,
+boosting cannot overcome flawed measurements and bad data collection. 
+
+## Practical Use
+
+Going to work with BikeData. There are two data sets. First, the one with daily 
+data is used. Only some variables are used. 
+
+```{r}
+suppressMessages(library(tidyverse))
+suppressMessages(library(rpart))
+suppressMessages(library(randomForest))
+suppressMessages(library(gbm))
+suppressMessages(day <- read_csv("day.csv"))
+data <- day %>% select(cnt, atemp, hum, windspeed, season, holiday, workingday, weathersit)
+head(data)
+
+#CART
+par(mar=c(1,1,1,1))
+mod <- rpart(cnt ~ ., data = data, method = "anova")
+plot(mod)
+text(mod)
+
+#Looks like atemp, season, hum & windspeed has an influence. Windspeed not so much.
+#Holiday, workingday, weathersit does not mean anything according to the tree.
+
+####Bagging####
+par(mar=c(5,5,5,5))
+set.seed(69)
+mod <- randomForest(cnt ~ ., data = data, mtry = 7) #500 replications
+varImpPlot(mod) # The same variables  are chosen again
+
+####Random Forest####
+mod <- randomForest(cnt ~ ., data = data) #p/3 variables sampled each time, 500
+#replications
+varImpPlot(mod) #The order of importance changes. Not the bottom ones tho. 
+
+mod <- randomForest(cnt ~ ., data = data, mtry = 5)
+varImpPlot(mod)
+
+#Looks like the 4 most important variables are the same each time. 
+
+mod <- gbm(cnt ~ ., data = data, n.trees = 10000, interaction.depth = 1,
+           shrinkage = 0.01)
+
+summary(mod)
+
+mod <- gbm(cnt ~ ., data = data, n.trees = 10000, interaction.depth = 4,
+           shrinkage = 0.01)
+
+summary(mod)
+
+#Still the same variables are used each time. 
+
+
+```
+
