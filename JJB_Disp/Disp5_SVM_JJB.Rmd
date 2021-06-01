@@ -7,4 +7,177 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+### Optimal Separation Hyperplanes
+
+The general idea is to separate classes using hyperplanes. Recall that a hyperplane is a function of the form
+
+\begin{align}
+    \beta_0 +\beta_1 x_1 + \cdots + \beta_px_p = 0.
+\end{align}
+
+For convenience i will only consider two clases where $y_i \in \{-1,1\}$. We are interest in $\beta_0,\ldots,\beta_p$ such that when we are on one side of the hyperplane all observations are equal to $1$ and on the other side $-1$.
+
+\begin{align}
+    \beta_0 +\beta_1 x_1 + \cdots + \beta_px_p > 0, \quad \text{if } y_i=1,
+\end{align}
+
+and 
+
+\begin{align}
+    \beta_0 +\beta_1 x_1 + \cdots + \beta_px_p < 0, \quad \text{if } y_i=-1.
+\end{align}
+
+We can rewrite this
+
+\begin{align}
+    y_i \cdot (\beta_0 +\beta_1 x_1 + \cdots + \beta_px_p) > 0.
+\end{align}
+
+We are under the assumption that the classes can be separated, and if that is the case then we have infinitely many choices of hyperplanes that all separate the classes.
+
+**PLOT**
+
+Before considering where to put the plane, we want a way to calculate the distance from an observation to the closest point in the plane, this is done by solving
+
+\begin{align}
+    min_x ||x-x_i||^2, \quad \text{subject to }  \beta_0 + XB = 0,
+\end{align}
+
+from which we can construct the Lagrange
+
+\begin{align}
+    \mathcal{L}=||x-x_i||^2 + 2\lambda, (\beta_0+XB)
+\end{align}
+
+the solution is given by 
+
+\begin{align}
+    dist = \frac{\beta_0 + \beta_1 x_{1,i}+ \cdots + \beta_p x_{p,i}}{(\beta_1^2 + \cdots + \beta_p^2)^{1/2}}
+\end{align}
+
+
+
+The minimum distance between the explanatory variables and a separating hyperplane is called the margin and is given by 
+
+\begin{align*}
+    M=M( \beta_0, \beta_1, \ldots , \beta_p) = \underset{\{x_i\}_{i=1}^n }{\text{min}} \frac{\beta_0 + \beta_1 x_{1,i}+ \cdots + \beta_p x_{p,i}}{(\beta_1^2 + \cdots + \beta_p^2)^{1/2}}
+\end{align*}
+
+
+
+We define the maximal margin classifier as the solution to 
+
+
+\begin{align}
+    \underset{B}{\text{max}} \ M
+\end{align}
+
+subject to
+
+\begin{align}
+    B^TB = 1, \: \text{and }  y_i \cdot (\beta_0 +\beta_1 x_{1,i} + \cdots + \beta_px_{p,i}) \geq M \: \forall i.
+\end{align}
+
+The observations with distance equal to the margin are called support vectors.
+
+Note that we can combine the the restrictions to  
+
+\begin{align}
+     y_i \cdot (\beta_0 +\beta_1 x_{1,i} + \cdots + \beta_px_{p,i}) \geq M ||B||\: \forall i.
+\end{align}
+
+or 
+
+\begin{align}
+     \frac{1}{||B||}y_i \cdot (\beta_0 +\beta_1 x_{1,i} + \cdots + \beta_px_{p,i}) \geq M\: \forall i.
+\end{align}
+
+This shows an inverse relation between $M$ and $||B||$ thus the optimization problem becomes
+
+\begin{align}
+    \underset{B}{min}\frac{1}{2}||B||2
+\end{align}
+
+
+\begin{align}
+    y_i \cdot (\beta_0 +\beta_1 x_{1,i} + \cdots + \beta_px_{p,i}) > 1 \: \forall i,
+\end{align}
+
+where we have chosen $M=1$ for simplicity. The problem posed by the maximal margin classifier is a convex optimization problem, quadratic criterion with linear inequality constraints. The solution to this problem involves constructing and solving a Lagrange function that gives rise to the following conditions
+
+
+\begin{align}
+    \sum_{i=1}^n \alpha_i - \frac{1}{2} \sum_{i=1}^n \sum_{j=1}^n \alpha_i \alpha_j y_i y_j x_i^T x_j,
+\end{align}
+
+where $\alpha$ is Lagrange multipliers. This formulation makes it computationally simpler to solve the optimization problem. The conditions show that the solution only depends on the product of the elements of $x$.
+
+#### considerations
+
+It is not probabilities. Care must betaken regarding the scale of the variables. The algorithm suffers from high variability given its dependence on the support vectors.  A small change to one of the support vectors can greatly influence the results. The algorithm is based around an assumption that the hyperplane exists.
+
+### Support Vector Classifiers 
+For suport vector classifiers we relax the restraint on the margin, and construct a new optimization problem, where we allow some observations to be within the margin, or possibly misclassified. The new problem is
+
+\begin{align}
+    \underset{B, \varepsilon_1,\ldots,\varepsilon_n}{\text{max}} \ M
+\end{align}
+
+subject to
+
+\begin{align}
+    B^TB = 1, \: \text{and }  y_i \cdot (\beta_0 +\beta_1 x_{1,i} + \cdots + \beta_px_{p,i}) \geq M(1-\varepsilon_i) \: \forall i.
+\end{align}
+
+and 
+
+\begin{align}
+    \varepsilon_i \geq 0 \: \forall \: i, \quad \text{and} \quad \sum_{i=1}^n\varepsilon_i \leq C,
+\end{align}
+
+where $\varepsilon$ are slack variables and $C$ is a tuning parameter.
+
+Notice that for the slack variabels
+
+* $\varepsilon_i = 0$ means that we do optimal separation hyperplanes
+
+* $0 < \varepsilon_i < 1$ the observation is allowed to lay within the margin.
+
+* $1 < \varepsilon_i$ the observation is allowed to traverse the margin, and thus allowed to be misclassified.
+
+The tuning parameter $C$ is chosen by cross validation. For $C$ we also have that for small $C$ we seek narrow narrow margins, that are rarely violated. When $C$ is larger we allow more variables within the margin, or possibly misclassification.
+
+As before observations that are far away from the hyperplane dose not affect the margin. The optimization problem gives rise to similar conditions on the form 
+
+\begin{align}
+    \sum_{i=1}^n \alpha_i - \frac{1}{2} \sum_{i=1}^n \sum_{j=1}^n \alpha_i \alpha_j y_i y_j x_i^T x_j,
+\end{align}
+
+where $\alpha$ is Lagrange multipliers, plus restrictions involving the slack variables.
+
+
 ### Support Vector Machines
+
+The idea is to use nonlinear transformations of the explanatory variables, to improve the accuracy of the classification. Of course we will remain linear in the transformed variables.
+
+**PLOT**
+
+There are many non-linear transformations that could be done to the explanatory variables e.g. $x_i^2, x_jx_i^2, x_j^2x_i$, however we use a trick related to the Lagrange condition we saw before.
+
+We will uses kernels like so:
+
+\begin{align}
+    \sum_{i=1}^n \alpha_i - \frac{1}{2} \sum_{i=1}^n \sum_{j=1}^n \alpha_i \alpha_j y_i y_j K(x_i,x_j),
+\end{align}
+
+where we in SVC used the linear kernel, i.e. $K(x_i,x_j)=\sum_{k=1}^px_{k,i}x_{k,j}=x^T_ix_j$. Other types of kernels are
+
+* Polynomial kernel: $K(x_i,x_j)=(1+\sum_{k=1}^px_{k,i}x_{k,j})^d$
+
+* Radial kernel: $K(x_i,x_j)=exp(-\gamma \sum_{k=1}^p(x_{k,i}x_{k,j})^2)$
+
+* ANOVA radial basis kernel: $K(x_i,x_j)=\sum_{k=1}^n exp (-\sigma (x_{k,i}x_{k,j})^2)^d$
+
+* Sigmoid kernel: $K(x_i,x_j)=tanh(\kappa \sum_{k=1}^p(x_{k,i}x_{k,j})+c)$
+
+The parameters in the kernels can be chosen by cross validation.
