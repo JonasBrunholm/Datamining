@@ -1,0 +1,166 @@
+---
+title: "Disp6_NN_JJB"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Artificial neural networks are inspired by the way in which neurons in the human brain transmit electric signals. The idea is to construct a graph, where the nodes are referred to as neurons, and thus pass information through the network, somewhat like electronic signals are passed through the human brain. Subsequently, we will only consider feedforward neural networks, wherein there exists no loops. These networks will be denoted by NN. 
+
+Neural networks can be used for both regression and classification problems, and is a supervised learning technique. Hence, one specifies $u$ explanatory variables with $n$ observations, $X_{n \times u}$, and response variable(s) of dimension $v$ with $n$ observations, $Y_{n \times v}$, when constructing a network.
+
+A NN can be illustrated as a weighted graph of $L \in \mathbb{N}$ layers, with $d_{(i)} \in \mathbb{N}$ neurons in each layer, $i = 0,1,\ldots, L$. The layers are not internally connected by edges. However, an edge is present from each neuron in layer $j$ to each neuron in layer $j+1$ for $j=0,1,\ldots,L-1$. Each neuron is assigned a value, referred to as an activation.
+
+The activation of neuron $k$ in layer $i$ is defined as 
+
+\begin{align}
+     a^{(i)}_k=f\left(\sum_{n=1}^{d_{(i-1)}} w_{n,k}^{(i)}a^{(i-1)}_n+b^{(i)}_k\right), \quad i = 1,\ldots,L,\quad w_{n,k}^{(i)} \in \mathbb{R}, \quad b^{(i)}_k \in \mathbb{R},\quad k=1,\ldots,d_{(i)},
+\end{align}
+
+where $w_{n,k}^{(i)}$ is the weight of the edge connecting neuron $n$ in layer $i-1$ to neuron $k$ in layer $i$. The term $b^{(i)}_k$ is refereed to as a bias of neuron $k$ in layer $i$. Lastly, $f:\mathbb{R} \rightarrow A, \: A\subseteq \mathbb{R}$ is referred to as the activation function.
+
+Notice that by defining $w_{0,k}^{(i)}=b^{(i)}_k$ and $a^{(i-1)}_0=1$ we can simplify as
+
+\begin{align*}
+    a^{(i)}_k=f\left(\sum_{n=0}^{d_{(i-1)}} w_{n,k}^{(i)}a^{(i-1)}_n\right), \quad i = 1,\ldots,L,\quad w_{n,k}^{(i)} \in \mathbb{R},\quad k=1,\ldots,d_{(i)}.
+\end{align*}
+
+As already stated in the first part of this chapter, NNs are supervised. Thus one has a set of response variables $Y$, and $u\in\mathbb{N}$ explanatory variables $x_1,\ldots, x_u$. In the NN, layer $0$ is referred to as the input layer, where each activation, $a^{(0)}_k, \: k=1,\ldots,d_{(0)}$, is assigned a value determined by the explanatory variables, thus $d_{(0)}=u$. The layers $1$ to $L-1$ are named the hidden layers of the NN. Lastly, layer $L$ is the output layer, where the number of neurons is equal to the dimension of the response variable(s), i.e. $d_{(L)}=v$. The activation of the output layer is often referred to as the output of the NN, which is defined as such.
+
+\begin{definition}[Output of a Neural Network]
+Let $X_{n \times d_{(0)}}$ be a design matrix, where the entries of row $s$ are denoted by $x_{s,1},\ldots,x_{s,d_{(0)}}$. 
+
+The activation of the $k'th$ output neuron of the neural network, $a^{(L)}_k$, given $x_{s,1} = a^{(0)}_1,\ldots,x_{s,d_{(0)}}=a^{(0)}_{d_{(0)}}$ is defined as $\hat{y}_{s_k}$.
+
+%Where $(x_{s,1},\ldots x_{s,d_{(0)}})$ is row $s$ of the design matrix.
+
+%The activation of the $k'th$ output neuron of the neural network, $a^{(L)}_k$, given $x_{s,1} = a^{(0)}_1,\ldots,x_{s,d_{(0)}}=a^{(0)}_{d_{(0)}}$ row of the design matrix is defined as $\hat{y}_{s_k}$.
+\end{definition}
+
+\begin{remark}
+In the case of $d_{(L)}=1$ we will denote $\hat{y}_{s_k}$ by $\hat{y}_s$.
+\demo
+\end{remark}
+
+\begin{remark}
+Note that principally, the activation $a_k^{(i-1)}$ depends on $s$. However, the dependency is not shown explicitly in the equations.
+\demo
+\end{remark}
+
+It is not uncommon that the activation function for the output layer differs from the activation function for the rest of the layers.
+
+The choice of activation function, for the output layer, depends entirely on the problem at hand. In the case of a categorical problem with only 2 categories, one might use the sign function in the output layer. However, it is also possible to use any of the other activation functions. As for regression problems, the choice is also entirely up to the researcher as there is no clear answer to what works best, in the same way as there is no clear answer to the amount of hidden layers and neurons to choose. This leads us to the structure of a NN.
+
+The simplest structure for a NN is called the perceptron. An example of the perceptron is depicted. As mentioned, the perceptron contains two layers, the input layer and the output layer, where the output layer is always of dimension $1$.
+
+As previously stated, the input and output layers are ''predetermined`` by the data. However, the hidden layers are in no way fixed. Thus there exists infinitely many structure possibilities, which complicates the design of a NN.
+
+The creator of the NN determines the amount of neurons and hidden layers based on some initial guess of what the NN would need in order to perform a given task. When adding multiple hidden layers with many neurons in each layer, the NN can become a ''black box``, i.e. it is hard to determine what the NN actually does to give the output. This can be a problem for instance in the finance industry where the risk management team needs to understand the shortfalls of the NN. Thus one needs to be careful when determining the structure of a NN.
+
+On Figure \ref{fig:begge_nn}, two different NNs can be seen. On Figure \ref{fig:perceptron}, we see the before mentioned perceptron with $5$ input neurons. On Figure \ref{fig:stor_nn}, a NN with 2 hidden layers is seen. There are $4$ neurons in each of the hidden layers. There are $3$ neurons in the input layer and $2$ neurons in the output layer. These are just 2 examples of how a NN can be constructed.
+
+### Training
+
+The training of a NN is vital to getting usable results. When one wants to train a NN, two things should be available, namely the training data and a cost function. For this section we will assume that the output of the NN has dimension 1.
+
+%When training a NN one needs to specify a cost function. 
+For the remainder of this chapter, we will use the scaled average of the squared residuals as the cost function, i.e.
+
+\begin{align*}
+    C(\hat{y}) = \frac{1}{2n}\sum_{s=1}^n(\hat{y}_s-y_s)^2.
+\end{align*}
+
+Where $y_s$ is observation $s$ for the response variable, i.e. row $s$ of $Y_{n \times 1}$. With a slight abuse of notation, we write $C(\hat{y})=C$.
+%, since $\hat{y}$ is the only variable we are interested in when considering the loss function.
+
+\subsection{Backpropagation Algorithm}
+The general idea of training is to calculate the activations throughout the network until the output is calculated. Then calculate the cost function, and using a gradient descent algorithm trying to minimize the cost function by use of the chain rule. This procedure is referred to as the back propagation algorithm. Since the input of the model is given, we want to change the weights and biases to minimize the cost function. We update the weights and biases in the following way
+
+\begin{align*}
+    w_{j,k}^{(i)\: new}&=w_{j,k}^{(i)\: old} - \eta \frac{\partial C}{\partial w_{j,k}^{(i)}},
+\end{align*}
+
+where $\eta$ is the learning rate, or the step length in the gradient descent. Thus we need $\frac{\partial C}{\partial w_{j,k}^{(i)}}$ for each $j,k$ and $i$. In the case with only one output neuron, and by use of the linearity of the differential operator, we have
+
+\begin{align}
+    \frac{\partial C}{\partial w_{j,k}^{(i)}} = \frac{1}{2n}\sum_{s=1}^n \frac{\partial}{\partial w_{j,k}^{(i)}}(\hat{y}_s-y_s)^2=\frac{1}{2n}\sum_{s=1}^n\frac{\partial C_s}{\partial w_{j,k}^{(i)}},
+\end{align}
+
+where $C_s=(\hat{y}_s-y_s)^2$. Thus the essence of the problem is to compute the differential of $C_s$ wrt. the weight $w_{j,k}^{(i)}$, which is done using the chain rule, i.e.
+
+\begin{align}
+    \frac{\partial C_s}{\partial w_{j,k}^{(i)}}&= \frac{\partial C_s}{\partial z_j^{(i)}}\frac{\partial z_j^{(i)}}{\partial w_{j,k}^{(i)}}, \nonumber \\
+    \label{eq:z}
+    z_j^{(i)}&= \sum_{n=0}^{d_{(i-1)}}w_{n,j}^{(i)} a_n^{(i-1)}.
+\end{align}
+
+The calculation will be done in two parts, where the first derivative will be referred to as the error for input $s$. Like for the activations, we will not explicitly write the $s$ dependency. Thus the error for input $s$ will be denoted by $\delta^{(i)}_{j}$, i.e.
+
+\begin{align*}
+    \delta^{(i)}_{j} = \frac{\partial C_s}{\partial z_j^{(i)}}.
+\end{align*}
+
+The second derivative is computed as such
+
+\begin{align*}
+    \frac{\partial z_j^{(i)}}{\partial w_{j,k}^{(i)}} =\frac{\partial}{\partial w_{j,k}^{(i)}}\sum_{t=0}^{d_{(i-1)}}w_{t,k}^{(i)}a_k^{(i-1)} = a_k^{(i-1)}.
+\end{align*}
+
+Thus the derivative of the cost function for input $s$ is 
+
+\begin{align*}
+    \frac{\partial C_s}{\partial w_{j,k}^{(i)}} = \frac{\partial C_s}{\partial z_j^{(i)}}\frac{\partial z_j^{(i)}}{\partial w_{j,k}^{(i)}}= \delta_{j}^{(i)}a_k^{(i-1)},
+\end{align*}
+
+which is the product of the error term for neuron $j$ in layer $i$ and the activation of neuron $i$ in layer $k-1$.
+
+With the groundwork above, we are ready to consider the backpropagation algorithm. It consists of a forward phase, where one computes the activation for every neuron in each layer by feeding the NN and a backward phase, where one calculates the error estimates. 
+
+\newpage
+
+Once both phases are complete, we have the necessary information to calculate the change in the weights. 
+
+\begin{align*}
+    \Delta w_{j,k}^{(i)}=-\eta \frac{1}{2n}\sum_{s=1}^n\frac{\partial C_s}{\partial w_{j,k}^{(i)}} = -\eta \frac{1}{2n}\sum_{s=1}^n\delta_{j}^{(i)}a_k^{(i-1)}.
+\end{align*}
+
+During the forward phase, we achieve all the activations, $a_k^{(i-1)}$. We achieve the activations starting in the first layer, then the second layer, etc. It is thus left to calculate all the $\delta_j^{(i)}$. This is the backwards phase, since we achieve them in reverse order. The $\delta$ for the last layer can be calculated by 
+
+\begin{align}
+    \delta_i^{(L)}= \frac{\partial C}{ \partial z_i^{(L)}} = \frac{\partial}{\partial z_i^{(L)}} \left( \frac{1}{2} (f(z_i^{(L)})-y)^2 \right)= f(z_i^{(L)} -y)f'(z_i^{(L)}).
+    \label{eq:delta_last}
+\end{align}
+
+For the remaining errors, the chain rule gives 
+
+\begin{align}
+    \delta_i^{(k)}= \frac{\partial C}{ \partial z_i^{(k)}}= \sum_j \frac{\partial C}{ \partial z_j^{(k+1)}} \frac{\partial z_j^{(k+1)}}{ \partial z_j^{(k)}}=\sum_j \delta_j^{(k+1)} \frac{\partial z_j^{(k+1)}}{ \partial z_j^{(k)}}.
+    \label{eq:delta_rest}
+\end{align}
+
+Thus we can consider the backpropagation algorithm:
+
+\textbf{Backpropagation}
+\begin{enumerate}
+    \item For a set of $X_{n,d_{(0)}}$ and $Y_{n,d_{(L)}}$.
+    \item Specify the step length, $\eta$, activation function $f$, and a stopping criteria.
+    \item Assign each weight $w_{i,j}^{(i)}$ a real value (this is often done with a small random value).
+    \item While stopping criteria not met
+    \begin{itemize}
+        \item For $s$ in $1:n$
+        \begin{itemize}
+            \item Calculate $z_{k}^{(i)}$ using \eqref{eq:z} and $a_{k}^{(i)}$ by \eqref{eq:activation_function} for $i$ in $1:L$ and $k$ in $1:d_{(i)}$.
+            \itemsep0.3em
+            \item Calculate $\delta_{j}^{(i)}$ by applying \eqref{eq:delta_last} and \eqref{eq:delta_rest}, for $i$ in $L:1$ and $j$ in $1:d_{(i)}$.
+        \end{itemize}
+        \itemsep0.1em
+        \item Update $w_{j,k}^{(i)} \leftarrow w_{j,k}^{(i)} - \eta \frac{1}{2n} \sum_{s=1}^n \delta_{j}^{(i)}a_k^{(i-1)}$ for $i$ in $1:L$ and $k$ in $1:d_{(i)}$ and $j$ in $0:d_{(i-1)}$.
+    \end{itemize}
+    % \itemsep 0.1em
+    % \item Until stopping criteria is met. 
+\end{enumerate}
+
+In the backpropagation algorithm the criteria $||\partial C / \partial w_{j,k}^{(i)}|| < \epsilon$ for each $j,k,i$, is often used, where $\epsilon$ is a small real number.

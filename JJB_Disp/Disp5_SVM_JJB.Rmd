@@ -83,7 +83,13 @@ The observations with distance equal to the margin are called support vectors.
 Note that we can combine the the restrictions to  
 
 \begin{align}
-     B^TB = 1, \: \text{and }  y_i \cdot (\beta_0 +\beta_1 x_{1,i} + \cdots + \beta_px_{p,i}) \geq M ||B||\: \forall i.
+     y_i \cdot (\beta_0 +\beta_1 x_{1,i} + \cdots + \beta_px_{p,i}) \geq M ||B||\: \forall i.
+\end{align}
+
+or 
+
+\begin{align}
+     \frac{1}{||B||}y_i \cdot (\beta_0 +\beta_1 x_{1,i} + \cdots + \beta_px_{p,i}) \geq M\: \forall i.
 \end{align}
 
 This shows an inverse relation between $M$ and $||B||$ thus the optimization problem becomes
@@ -94,10 +100,10 @@ This shows an inverse relation between $M$ and $||B||$ thus the optimization pro
 
 
 \begin{align}
-    y_i \cdot (\beta_0 +\beta_1 x_{1,i} + \cdots + \beta_px_{p,i}) > 1 \: \forall i.
+    y_i \cdot (\beta_0 +\beta_1 x_{1,i} + \cdots + \beta_px_{p,i}) > 1 \: \forall i,
 \end{align}
 
-The problem posed by the maximal margin classifier is a convex optimization problem, quadratic criterion with linear inequality constraints. The solution to this problem involves constructing and solving a Lagrange function that gives rise to the following conditions
+where we have chosen $M=1$ for simplicity. The problem posed by the maximal margin classifier is a convex optimization problem, quadratic criterion with linear inequality constraints. The solution to this problem involves constructing and solving a Lagrange function that gives rise to the following conditions
 
 
 \begin{align}
