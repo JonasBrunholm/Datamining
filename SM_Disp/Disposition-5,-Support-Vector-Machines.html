@@ -329,6 +329,7 @@ f(X)=\beta_0+\beta_1X_1+\ldots+\beta_pX_p
 \underset{\beta_0,\ldots,\beta_p}{\min}\left\{ \sum_{i=1}^n (1-y_if(x_i))^++\lambda
 \sum_{j=1}^p\beta_j^2\right\}
 \end{align*}\]</span></p>
+<p>It is also possible to use SVM for regression by changing the loss function. An approach to this is to ignore residuals smaller in absolute value than some tolerance, but use a linear loss for the other residuals. Called a robustified kind of regression.</p>
 </div>
 
 
