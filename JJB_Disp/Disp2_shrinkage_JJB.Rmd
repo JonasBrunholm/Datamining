@@ -10,12 +10,6 @@ library(glmnet)
 
 ```
 
-For extending the linear regression there are two goals to pursue:
-
-* To make the model easier to interpret.
-
-* To shrink or constrain the variables, thus decreasing the variance and at the cost of a neglegable increase in bias.
-
 It is common to have a lot of different explanatory variables. There are $3$ main ways of handling them
 
 * Subset Selection.
@@ -31,6 +25,12 @@ There are two main ways to do shirnkage: **Ridge regression** and **Lasso**.
 * smaller range of variation.
 
 * Ridge and Lasso vary by the way the penalty is imposed.
+
+The idea is
+
+* To make the model easier to interpret.
+
+* To shrink or constrain the variables, thus decreasing the variance and at the cost of a neglegable increase in bias.
 
 ### Ridge Regression
 
@@ -176,8 +176,70 @@ Thus we have an expression for $\beta_k$ in the Lasso method.
 
 \end{align}
 
-* Uses
 
+## Practical implementation on BikeSharing data set
 
+```{r}
+suppressMessages(library(glmnet))
+suppressMessages(library(ggplot2))
+data <- suppressMessages(read_csv("Data_Bike_share_day.csv")) # Getting the data
+dat <- data %>% select(cnt, windspeed, atemp, hum) #Selecting some variables to work with
+head(dat)
 
+mod <- glmnet(y = dat$cnt, x = (dat %>% select(-cnt)), data = dat, alpha = 0,
+              family = "gaussian", lambda = seq(1,100000,100)) #Alpha = 0 is ridge
+
+coefficients <- mod$beta %>% as.matrix() %>% t() %>% data.frame
+rownames(coefficients) <- NULL
+
+Plot_Data <- coefficients %>% mutate(mod$lambda) %>% rename("lambda" = "mod$lambda")
+
+ggplot(data = Plot_Data, aes(x = lambda)) +
+  geom_line(aes(y = hum, color = "hum")) +
+  geom_line(aes(y = windspeed, color = "windspeed")) + 
+  geom_line(aes(y = atemp, color = "atemp")) +
+  scale_color_manual("", breaks = c("hum", "windspeed", "atemp"), 
+                     values = c("red", "green", "blue")) +
+  ylab("betas") +
+  ggtitle("Ridge")
+
+#Lets try lasso
+
+mod <- glmnet(y = dat$cnt, x = (dat %>% select(-cnt)), data = dat, alpha = 1,
+              family = "gaussian", lambda = seq(1,1500,1))
+
+coefficients <- mod$beta %>% as.matrix() %>% t() %>% data.frame
+rownames(coefficients) <- NULL
+
+Plot_Data <- coefficients %>% mutate(mod$lambda) %>% rename("lambda" = "mod$lambda")
+
+ggplot(data = Plot_Data, aes(x = lambda)) +
+  geom_line(aes(y = hum, color = "hum")) +
+  geom_line(aes(y = windspeed, color = "windspeed")) + 
+  geom_line(aes(y = atemp, color = "atemp")) +
+  scale_color_manual("", breaks = c("hum", "windspeed", "atemp"), 
+                     values = c("red", "green", "blue")) +
+  ylab("betas") +
+  ggtitle("Lasso")
+
+#Last, elastic net with alpha = 0.5
+
+mod <- glmnet(y = dat$cnt, x = (dat %>% select(-cnt)), data = dat, alpha = 0.5,
+              family = "gaussian", lambda = seq(1,2500,1))
+
+coefficients <- mod$beta %>% as.matrix() %>% t() %>% data.frame
+rownames(coefficients) <- NULL
+
+Plot_Data <- coefficients %>% mutate(mod$lambda) %>% rename("lambda" = "mod$lambda")
+
+ggplot(data = Plot_Data, aes(x = lambda)) +
+  geom_line(aes(y = hum, color = "hum")) +
+  geom_line(aes(y = windspeed, color = "windspeed")) + 
+  geom_line(aes(y = atemp, color = "atemp")) +
+  scale_color_manual("", breaks = c("hum", "windspeed", "atemp"), 
+                     values = c("red", "green", "blue")) +
+  ylab("betas") +
+  ggtitle("Elastic Net")
+
+```
 
