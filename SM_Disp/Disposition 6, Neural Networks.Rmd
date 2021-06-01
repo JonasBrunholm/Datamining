@@ -1,0 +1,20 @@
+---
+title: "Topic 6; Neural Networks"
+author: "Jonas Mikkelsen"
+date: "31/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Neural Networks
+
+Artificial neural networks are inspired by the way in which neurons in the human
+brain transmit electric signals. The idea is to construct a graph, where the nodes
+are referred to as neurons, and thus pass information through the network, somewhat
+like electronic signals are passed through the human brain.
+
+## The percentron
+

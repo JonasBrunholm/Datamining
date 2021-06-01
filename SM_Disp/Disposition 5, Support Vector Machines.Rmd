@@ -1,0 +1,315 @@
+---
+title: "Topic 5; Support Vector Machines"
+author: "Jonas Mikkelsen"
+date: "31/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Gonna go through the steps needed to get the Support Vector machines. 
+ 
+# Optimal Seperating Hyperplanes
+
+For logistic regression, we use probabilities of being in each class. In Separating
+Hyperplanes, we use linear restriction in the space spanned by the explanatory 
+variables. That is, we try to find a separating hyperplane such that observations
+from different classes is present on the different sides of the hyperplane. 
+
+Let $X_1,\ldots X_p$ be explanatory variables for a response variables that takes
+two values. Let $\beta_0,\beta_1,\ldots,\beta_p$ be scalars. An hyperplane
+is defined as the points that satisfies 
+
+\begin{align*}
+  \beta_0+\beta_1X_1+\ldots+\beta_pX_p = 0
+\end{align*}
+
+For simplicity, assume that the two classes for the response is $y_i \in \{-1,1\}$.
+The idea is thus to find a hyperplane such that the observations with $y_i = 1$
+at one side of the hyperplane, while others with $y_i=-1$ on the other side. 
+
+Hence we want that 
+
+\begin{align*}
+\beta_0+\beta_1x_{i,1}+\ldots+\beta_px_{i,p} > 0\quad  \text{if}\quad y_i = 1,
+\end{align*}
+
+and 
+
+\begin{align*}
+\beta_0+\beta_1x_{i,1}+\ldots+\beta_px_{i,p} < 0\quad  \text{if}\quad y_i = -1,
+\end{align*}
+
+More compactly, we can write both these conditions as
+
+\begin{align*}
+y_i (\beta_0+\beta_1x_{i,1}+\ldots+\beta_px_{i,p}) > 0
+\end{align*}
+
+which captures both cases. Additionally, if it is possible to find a seperating 
+hyperplane, we can find an infinite amount, since we can just twist them or move
+them slightly. Hence we need to select one of them by using an optimality 
+criterion in order to evaluate the different options. \\
+A possible solution is to select the hyperplane farthest away from the observations.
+One computes all the distances from the observation to the hyperplane. The resulting
+number is known as the margin. Hence we are looking for the maximal margin. 
+
+In order to compute the distance from an observation to the hyperplane, let 
+
+\begin{align*}
+  \beta_0+\beta_1X_1+\ldots+\beta_pX_p = \beta_0+X\beta = 0
+\end{align*}
+
+be the separating hyperplane. Let $x_0=(x_{0,1},\ldots,x_{0,p})$ be a point. 
+Then the distance from $x_0$ to the hyperplane is defined as the distance from
+$x_0$ to the closest point in the hyperplane. Hence, the distance from $x_0$ 
+to the hyperplane is given by 
+
+\begin{align*}
+\underset{x}{\min}||x-x_0||\quad \text{subject to}\quad \beta_0+\beta^Tx = 0. 
+\end{align*}
+
+The restriction guarantees that the point obtained $x$ is part of the hyperplane.
+To solve this, define the lagrangian function;
+
+\begin{align*}
+\mathcal{L} = ||x-x_0||^2+2\lambda(\beta_0+\beta^Tx)
+\end{align*}
+
+hence 
+
+\begin{align*}
+\frac{\partial L}{\partial x} = 2(x-x_0)+2\lambda\beta
+\end{align*}
+
+equating this to $0$ and solving for $x$ yields
+
+\begin{align*}
+x = x_0-\lambda\beta
+\end{align*}
+
+similarly;
+
+
+\begin{align*}
+\frac{\partial L}{\partial \lambda} = 2(\beta_0+\beta^Tx)
+\end{align*}
+
+Equating to $0$ and inserting $x$ yields
+
+\begin{align*}
+\beta_0+\beta^T(x_0-\lambda\beta) = 0 \quad\Leftrightarrow \lambda = 
+\frac{\beta_0+\beta^Tx_0}{\beta^T\beta} = \frac{\beta_0+\beta^Tx_0}{||\beta||^2}
+\end{align*}
+
+This entails
+
+\begin{align*}
+||x-x_0|| = ||x_0-\lambda\beta - x_0 || = ||\lambda\beta|| &= \lambda||\beta||\\
+&= \frac{\beta_0+\beta^Tx_0}{||\beta||} = \frac{\beta_0 + \beta_1x_{0,1}+\ldots+
+\beta_px_{0,p}}{(\beta_1^2+\ldots+\beta_p^2)^{1/2}}
+\end{align*}
+
+Which shows the distance from some points $x_0$ to a hyperplane. In particular, 
+it shows that the distance depends on the parameters. Then the minimum distance
+between the explanatory variables and a separating hyperplane is called the margin
+and is given by 
+
+\begin{align*}
+M = M(\beta_0, \beta_1,\ldots,\beta_p) = \underset{(x_{i,1},\ldots,x_{i,p})_{i=1}^n}
+{\min}\frac{\beta_0+\beta_1x_{i,1}+\ldots+\beta_px_{i,p}}{(\beta_1^2+\ldots+\beta_p^2)^{1/2}}
+\end{align*}
+
+Hence afterwards, we define the maximal margin by 
+
+\begin{align*}
+\underset{\beta_0,\ldots,\beta_p}{\max}M
+\end{align*}
+
+subject to 
+
+\begin{align*}
+  \sum_{j=1}^p\beta_j^2 = 1\quad\text{and}\quad y_i(\beta_0+\beta_1x_{i,1}+\ldots
+  +\beta_px_{i,p}) \geq M \quad \forall i.
+\end{align*}
+
+We need to restrict the hyperplane parameters in order to not just obtain a trivial
+result such as infinity. Due to the first restriction, the distance also simplies 
+to 
+
+\begin{align*}
+dist = \beta_0+\beta_1x_{i,1}+\ldots+\beta_px_{i,p} 
+\end{align*}
+
+Additionally, by construction, the hyperplane only depends on the observations close to it, i.e. the $(x_{i,1},\ldots, x_{i,p})$ such that $M=\beta_0+\beta_1x_{i,1}+\ldots+\beta_px_{i,p}. Observations far away does not
+change the solution to the optimization problem. Observations with distance to the
+hyperplane equal to the margin are known as support vectors. The distance from
+the hyperplane to all support vectors are the same, i.e. equidistant to all classes.
+
+It is also possible to combine the two restrictions into a single restriction by
+simply writing
+
+\begin{align*}
+y_i(\beta_0+\beta_1x_{i,1}+\ldots+\beta_px_{i,p})\geq M||\beta||
+\end{align*}
+
+or 
+
+\begin{align*}
+\frac{1}{||\beta||}y_i(\beta_0+\beta_1x_{i,1}+\ldots+\beta_px_{i,p})\geq M
+\end{align*}
+
+with $||\beta|| = \left(\sum_{j=1}^p\beta_j^2\right)^{1/2}$. Hence we can pick a
+margin and then find the length of $\beta$, or decide the length of $\beta$ and 
+find the corresponding margin. Hence to maximize $M$ we can minimize $\beta$. This
+implies that we can write the optimization problem as 
+
+\begin{align*}
+\underset{\beta_0,\beta_1,\ldots,\beta_p}{\min}\frac{1}{2}||\beta||^2
+\end{align*}
+
+subject to 
+
+\begin{align*}
+y_i(\beta_0+\beta_1x_{i,1}+\ldots+\beta_px_{i,p}) > 1,\quad \forall i
+\end{align*}
+
+where we have simply chosen $M = 1$ and chosen to minimize $\beta$. Solving this
+problem shows that the solution has the form 
+
+\begin{align*}
+  \sum_{i=1}^n\alpha_i-\frac{1}{2}\sum_{i=1}^n\sum_{j=1}^n\alpha_i\alpha_jy_iy_j
+  x_i^Tx_j
+\end{align*}
+
+where $\alpha_i,i=1,\ldots,n$ are the lagrange multipliers. Hence the solution
+depends on the products of the elements $x_{i,1},\ldots,x_{i,p}$. 
+
+## Considerations
+
+Maximal margin classifier is based on distance and thus scaling matters. Algorithm
+suffers from high variability given its dependence on the support vectors. Small
+changes to one of the support vectors can greatly influence the results. Also,
+assumes the existence of a hyperplane. Also, the distance from each observation
+to the hyperplane can be used as a proxy of confidence in the classification.
+
+# Support Vector Classifiers
+
+The maximal marginal classifier uses hard margins, it forces all observations to
+fall in the right classification region. High variance to small changes in support
+vectors. Also, does not work if no separating hyperplane exist. The idea is to relax
+the assumption for the maximal marginal classifier by using soft margin instead.
+
+Soft margin means that some observation can fall inside the margin, or even be
+missclassified. Hence, if we cannot completely separate the date, we can still 
+find a hyperplane that separates most of the observations. Works by using slack 
+variables that control the number of observations inside the margin or the amount
+that is missclassified. They are denoted by $\epsilon_i$. 
+
+If $\epsilon_i = 0$ thenit is the same as before, using maximal margin classifier. \\
+If $0<\epsilon_i<1$ then the observation is inside the margin, distance to the 
+hyperplane is less than $M$\\
+If $\epsilon_i>1$ then the observation is on the wrong classification region. 
+Restriction changes sign.
+
+There is a new non-negative parameter $C$ which control how much the observations can violate
+the margin condition. Known as a flexibility parameter. Then, the support vector
+classifier solves
+
+\begin{align*}
+  \underset{\beta_0,\ldots,\beta_p,\epsilon_1,\ldots,\epsilon_n}{\max M}
+\end{align*}
+
+subject to 
+
+\begin{align*}
+  \sum_{j=1}^p\beta_j^2 = 1, \quad y_i(\beta_0+\beta_1x_{i,1}+\ldots+
+  \beta_px_{i,p}) \geq M(1-\epsilon_i),\quad \forall i
+\end{align*}
+
+and 
+
+\begin{align*}
+  \epsilon_i \geq 0\quad \forall i,\quad \sum_{i=1}^n\epsilon_i\leq C
+\end{align*}
+
+Now, the observations that are inside the margin and on the wrong side are now 
+the support vectors, i.e. the ones with $\epsilon_i > 0$. Small $C$ corresponds
+to narrow margins, rarely violated. Low bias but high variance. Large C has a 
+wider margin and more violation. More bias but lower variance. C is usually chosen
+by cross validation. Similarly, observations far away do not affect the hyperplane. 
+C controls the width of the margin and hence the number of observations that
+supports the hyperplane. 
+
+As previously, the solution to this optimization problem has the same form as before;
+
+\begin{align*}
+  \sum_{i=1}^n\alpha_i-\frac{1}{2}\sum_{i=1}^n\sum_{j=1}^n\alpha_i\alpha_jy_iy_j
+  x_i^Tx_j
+\end{align*}
+
+where $\alpha_i,i=1,\ldots,n$ are the lagrange multipliers plus restrictions involving
+slack variables. Solution depends on cross-products of the explanatory variables. 
+
+# Support Vector Machines
+
+The maximal margin classifier and support vector classifier uses linear 
+specifications to define the separating hyperplane. We want to add non-linearity,
+i.e. transformation of data. The procedure is still linear in the transformed
+variables. We are still finding hyperplanes, but in higher dimensions. Hence we 
+could follow the same principle as before and add nonlinear transformations, e.g.
+polynomial trems
+
+\begin{align*}
+\beta_0+\beta_1X_1+\ldots+\beta_pX_p+\beta_{p+1}X_1^2+\ldots+\beta_{p+d}X_1^{d+1}
++\beta_mX_p^{d+1} = 0
+\end{align*}
+
+Hence there are more things to consider, how many polynomial terms should be added,
+and whether to include interaction effects, sin, cosine, etc. Require a lot of fine
+tuning. In Maximal margin classifier and support vector classifier, we use the
+cross products of the explanatory variables. However, Support vector machines
+extend this idea by using kernels instead of the cross products. 
+
+A kernel is a function that quantifies the similarity between a couple of observations. 
+
+An example is the linear kernel, $K(x_i,x_j) = \sum_{k=1}^px_{i,k}x_{j,k}$
+which just gives the cross products. Hence a support vector machine with linear 
+kernel is a support vector classifier. Examples of different kernels:
+
+Polynomial Kernel
+
+\begin{align*}
+  K(x_i,x_j) = (1+ \sum_{k=1}^px_{i,k}x_{j,k})^d
+\end{align*}
+
+Radial Kernel:
+
+\begin{align*}
+  K(x_i,x_j) = \exp(-\gamma\sum_{k=1}^p(x_{i,k}-x_{j,k})^2)
+\end{align*}
+
+There are more kernels. The chosen one depends on the problem and data. 
+
+For multiple classes (more than 2), one typically uses one-vs-all or one-vs-one. 
+
+Let 
+
+\begin{align*}
+f(X)=\beta_0+\beta_1X_1+\ldots+\beta_pX_p
+\end{align*}
+
+then the problem solved by SVM can be formulated as 
+
+\begin{align*}
+\underset{\beta_0,\ldots,\beta_p}{\min}\left\{ \sum_{i=1}^n (1-y_if(x_i))^++\lambda
+\sum_{j=1}^p\beta_j^2\right\}
+\end{align*}
+
+It is also possible to use SVM for regression by changing the loss function. An
+approach to this is to ignore residuals smaller in absolute value than some tolerance,
+but use a linear loss for the other residuals. Called a robustified kind of 
+regression. 
