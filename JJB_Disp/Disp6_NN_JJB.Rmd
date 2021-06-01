@@ -56,7 +56,7 @@ nn_cars <- neuralnet(speed ~ dist, data=data_car)
 
 data_q <- quakes
 nn_q <- neuralnet(mag ~ . ,data=data_q,hidden = c(0),linear.output = T)
-plot(nn_q)
+plot(nn_q,rep = "best")
 
 ```
 
@@ -187,9 +187,9 @@ index <- sample(1:nrow(JJB_black_scholes),round(0.75*nrow(JJB_black_scholes)))
 sample_75 <- JJB_black_scholes[index,]
 sample_25 <- JJB_black_scholes[-index,]
 
-nn <- neuralnet(price ~ K + sivma + T_, data = sample_75, 
+nn <- neuralnet(price ~ K + sivma + T_, data = sample_75,
                 hidden=c(3,2),act.fct = "logistic", linear.output = TRUE)
-plot(nn)
+plot(nn, rep= "best")
 
 predict_25 <- predict(nn,newdata = sample_25[,-1])
 
