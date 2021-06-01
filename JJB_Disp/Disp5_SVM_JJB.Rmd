@@ -40,13 +40,13 @@ We are under the assumption that the classes can be separated, and if that is th
 Before considering where to put the plane, we want a way to calculate the distance from an observation to the closest point in the plane, this is done by solving
 
 \begin{align}
-    min_x ||x-x_i||^2, \quad \text{subject to }  \beta_0 + XB = 0,
+    min_x ||x-x_i||^2, \quad \text{subject to }  \beta_0 + x^TB = 0,
 \end{align}
 
 from which we can construct the Lagrange
 
 \begin{align}
-    \mathcal{L}=||x-x_i||^2 + 2\lambda, (\beta_0+XB)
+    \mathcal{L}=||x-x_i||^2 + 2\lambda(\beta_0+x^TB)
 \end{align}
 
 the solution is given by 
@@ -95,7 +95,7 @@ or
 This shows an inverse relation between $M$ and $||B||$ thus the optimization problem becomes
 
 \begin{align}
-    \underset{B}{min}\frac{1}{2}||B||2
+    \underset{B}{min}\frac{1}{2}||B||^2
 \end{align}
 
 
