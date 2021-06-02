@@ -31,7 +31,7 @@ It is similar to logistic regression. Logistic regression models $P(y=j|X)$, but
 LDA instead uses Bayes' theorem
 
 \begin{align*}
-P(y=k|X) = \frac{P(y=k)P(X|y=k)}{P(X)} = \frac{\pi_k f_k(x)}{\sum_{i=1}^Kf_i(x)}
+P(y=k|X) = \frac{P(y=k)P(X|y=k)}{P(X)} = \frac{\pi_k f_k(x)}{\sum_{i=1}^K\pi_if_i(x)}
 \end{align*}
 
 where $y\in\{1,\ldots, K\}, \pi_k = P(y=k),f_k(x)=P(X|y=k)$. For the denominator, 
@@ -55,7 +55,7 @@ To classify a new observation, $X_0$, we find the category with the highest prob
 $P(y=k|X_0)$, for each $k=1,\ldots,K$. In order to do this, take the log, such that
 
 \begin{align*}
-  \log(P(y=k|X)) = \log(\pi_k) + \log(f_k(x)) - \log(\sum_{i=1}^K\pi f_i(x))
+  \log(P(y=k|X)) = \log(\pi_k) + \log(f_k(x)) - \log(\sum_{i=1}^K\pi_i f_i(x))
 \end{align*}
 
 When maximizing, the last term does not contribute with anything since it is 
