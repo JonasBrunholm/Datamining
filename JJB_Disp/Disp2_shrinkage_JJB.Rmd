@@ -1,4 +1,4 @@
-u---
+---
 title: "Disposition_2_Shrinkage"
 output: html_document
 ---
@@ -55,8 +55,7 @@ RSS(\lambda) = (Y-X\beta)^T(Y-X\beta) + \lambda\beta^T\beta
 
 \end{align*}
 
-Use Lagrange with $\mathcal{L}=RSS(\lambda)$ to obtain $\partial \mathcal{L}
-/ \partial \beta=0$;
+Use $\mathcal{L}=RSS(\lambda)$ to obtain $\partial \mathcal{L}/ \partial \beta=0$;
 
 \begin{align*}
 
