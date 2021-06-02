@@ -31,7 +31,7 @@ It is similar to logistic regression. Logistic regression models $P(y=j|X)$, but
 LDA instead uses Bayes' theorem
 
 \begin{align*}
-P(y=k|X) = \frac{P(y=k)P(X|y=k)}{P(X)} = \frac{\pi_k f_k(x)}{\sum_{i=1}^K}f_i(x)
+P(y=k|X) = \frac{P(y=k)P(X|y=k)}{P(X)} = \frac{\pi_k f_k(x)}{\sum_{i=1}^Kf_i(x)}
 \end{align*}
 
 where $y\in\{1,\ldots, K\}, \pi_k = P(y=k),f_k(x)=P(X|y=k)$. For the denominator, 

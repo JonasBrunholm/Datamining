@@ -181,7 +181,7 @@ pre code {
 <h2>Linear Discriminant Analysis (LDA)</h2>
 <p>It is similar to logistic regression. Logistic regression models <span class="math inline">\(P(y=j|X)\)</span>, but LDA instead uses Bayes’ theorem</p>
 <p><span class="math display">\[\begin{align*}
-P(y=k|X) = \frac{P(y=k)P(X|y=k)}{P(X)} = \frac{\pi_k f_k(x)}{\sum_{i=1}^K}f_i(x)
+P(y=k|X) = \frac{P(y=k)P(X|y=k)}{P(X)} = \frac{\pi_k f_k(x)}{\sum_{i=1}^Kf_i(x)}
 \end{align*}\]</span></p>
 <p>where <span class="math inline">\(y\in\{1,\ldots, K\}, \pi_k = P(y=k),f_k(x)=P(X|y=k)\)</span>. For the denominator, note that <span class="math inline">\(P(X) = \sum_{i=1}^kP(X|y = i)\)</span> which is why the denominator has that form. To estimate <span class="math inline">\(\pi_k=P(y=k)\)</span>, we let it equal to the proportion of observations that belongs to class <span class="math inline">\(k\)</span>.</p>
 <p>For the remaining part, we only need to get <span class="math inline">\(f_k(x)=P(X|y=k)\)</span>. To do this, we must assume some distribution in order to get it. For LDA, we assume that <span class="math inline">\(f_k(x)\)</span> is multivariate normal, which means that</p>
