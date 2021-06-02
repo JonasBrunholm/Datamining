@@ -1,21 +1,27 @@
 ---
-title: "Disp6_NN_JJB"
+title: "Topic 6; Neural Networks"
+date: "31/5/2021"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)
-library(neuralnet)
-library(MLmetrics)
 ```
 
+# Neural Networks
 
-Artificial neural networks are inspired by the way in which neurons in the human brain transmit electric signals. The idea is to construct a graph, where the nodes are referred to as neurons, and thus pass information through the network, somewhat like electronic signals are passed through the human brain. Subsequently, we will only consider feedforward neural networks, wherein there exists no loops. These networks will be denoted by NN. 
+Artificial neural networks are inspired by the way in which neurons in the human
+brain transmit electric signals. The idea is to construct a graph, where the nodes
+are referred to as neurons, and thus pass information through the network, somewhat
+like electronic signals are passed through the human brain.
 
-Neural networks can be used for both regression and classification problems, and is a supervised learning technique. Hence, one specifies $u$ explanatory variables with $n$ observations, $X_{n \times u}$, and response variable(s) of dimension $v$ with $n$ observations, $Y_{n \times v}$, when constructing a network.
+Supervised learning technique that can be used for both regression and classification.
 
-A NN can be illustrated as a weighted graph of $L \in \mathbb{N}$ layers, with $d_{(i)} \in \mathbb{N}$ neurons in each layer, $i = 0,1,\ldots, L$. The layers are not internally connected by edges. However, an edge is present from each neuron in layer $j$ to each neuron in layer $j+1$ for $j=0,1,\ldots,L-1$. Each neuron is assigned a value, referred to as an activation.
+A NN can be illustrated as a weighted graph of $L \in \mathbb{N}$ layers, with 
+$d_{(i)} \in \mathbb{N}$ neurons in each layer, $i = 0,1,\ldots, L$. The layers 
+are not internally connected by edges. However, an edge is present from each neuron 
+in layer $j$ to each neuron in layer $j+1$ for $j=0,1,\ldots,L-1$. Each neuron is 
+assigned a value, referred to as an activation.
 
 The activation of neuron $k$ in layer $i$ is defined as 
 
@@ -23,57 +29,26 @@ The activation of neuron $k$ in layer $i$ is defined as
      a^{(i)}_k=f\left(\sum_{n=1}^{d_{(i-1)}} w_{n,k}^{(i)}a^{(i-1)}_n+b^{(i)}_k\right), \quad i = 1,\ldots,L,\quad w_{n,k}^{(i)} \in \mathbb{R}, \quad b^{(i)}_k \in \mathbb{R},\quad k=1,\ldots,d_{(i)},
 \end{align}
 
-where $w_{n,k}^{(i)}$ is the weight of the edge connecting neuron $n$ in layer $i-1$ to neuron $k$ in layer $i$. The term $b^{(i)}_k$ is refereed to as a bias of neuron $k$ in layer $i$. Lastly, $f:\mathbb{R} \rightarrow A, \: A\subseteq \mathbb{R}$ is referred to as the activation function.
+where $w_{n,k}^{(i)}$ is the weight of the edge connecting neuron $n$ in layer $i-1$ to neuron $k$ in layer $i$. The term $b^{(i)}_k$ is refereed to as a bias of neuron $k$ in layer $i$. Lastly, $f:\ \mathbb{R} \rightarrow A, \: A\subseteq\mathbb{R}$ is referred to as the activation function.
 
-Notice that by defining $w_{0,k}^{(i)}=b^{(i)}_k$ and $a^{(i-1)}_0=1$ we can simplify as
+Notice that by defining $w_{0,k}^{(i)}=b^{(i)}_k$ and $a^{(i-1)}_0=1$ we can simplify the activation as
 
 \begin{align*}
     a^{(i)}_k=f\left(\sum_{n=0}^{d_{(i-1)}} w_{n,k}^{(i)}a^{(i-1)}_n\right), \quad i = 1,\ldots,L,\quad w_{n,k}^{(i)} \in \mathbb{R},\quad k=1,\ldots,d_{(i)}.
 \end{align*}
 
-As already stated in the first part of this chapter, NNs are supervised. Thus one has a set of response variables $Y$, and $u\in\mathbb{N}$ explanatory variables $x_1,\ldots, x_u$. In the NN, layer $0$ is referred to as the input layer, where each activation, $a^{(0)}_k, \: k=1,\ldots,d_{(0)}$, is assigned a value determined by the explanatory variables, thus $d_{(0)}=u$. The layers $1$ to $L-1$ are named the hidden layers of the NN. Lastly, layer $L$ is the output layer, where the number of neurons is equal to the dimension of the response variable(s), i.e. $d_{(L)}=v$. The activation of the output layer is often referred to as the output of the NN, which is defined as such.
+## Structure
 
-Let $X_{n \times d_{(0)}}$ be a design matrix, where the entries of row $s$ are denoted by $x_{s,1},\ldots,x_{s,d_{(0)}}$. 
+The creator of the NN determines the amount of neurons and hidden layers based on some initial guess of what the NN would need in order to perform a given task. When adding multiple hidden layers with many neurons in each layer, the NN can become a ''black box``, i.e. it is hard to determine what the NN actually does to give the output. This can be a problem for instance in the finance industry where the risk management team needs to understand the shortfalls of the NN. Thus one needs to be careful when determining the structure of a NN.
+Simple structure is called the perceptron;
+![](Perceptron.PNG)
 
-The activation of the $k'th$ output neuron of the neural network, $a^{(L)}_k$, given $x_{s,1} = a^{(0)}_1,\ldots,x_{s,d_{(0)}}=a^{(0)}_{d_{(0)}}$ is defined as $\hat{y}_{s_k}$.
+Can be extended to more complicated structures;
 
-In the case of $d_{(L)}=1$ we will denote $\hat{y}_{s_k}$ by $\hat{y}_s$.
+![](Network.PNG)
 
-Note that principally, the activation $a_k^{(i-1)}$ depends on $s$. However, the dependency is not shown explicitly in the equations.
+## Training
 
-It is not uncommon that the activation function for the output layer differs from the activation function for the rest of the layers.
-
-The choice of activation function, for the output layer, depends entirely on the problem at hand. In the case of a categorical problem with only 2 categories, one might use the sign function in the output layer. However, it is also possible to use any of the other activation functions. As for regression problems, the choice is also entirely up to the researcher as there is no clear answer to what works best, in the same way as there is no clear answer to the amount of hidden layers and neurons to choose. This leads us to the structure of a NN.
-
-The simplest structure for a NN is called the perceptron. An example of the perceptron is depicted. As mentioned, the perceptron contains two layers, the input layer and the output layer, where the output layer is always of dimension $1$.
-
-The hidden layers are in no way fixed. Thus there exists infinitely many structure possibilities, which complicates the design of a NN.
-
-```{r}
-data_car <- cars
-nn_cars <- neuralnet(speed ~ dist, data=data_car)
-
-
-data_q <- quakes
-nn_q <- neuralnet(mag ~ . ,data=data_q,hidden = c(0),linear.output = T)
-plot(nn_q,rep = "best")
-
-```
-
-
-### Training
-
-The training of a NN is vital to getting usable results. When one wants to train a NN, two things should be available, namely the training data and a cost function. For this section we will assume that the output of the NN has dimension 1.
-
-We will use the following cost function,
-
-\begin{align*}
-    C(\hat{y}) = \frac{1}{2n}\sum_{s=1}^n(\hat{y}_s-y_s)^2.
-\end{align*}
-
-Where $y_s$ is observation $s$ for the response variable, i.e. row $s$ of $Y_{n \times 1}$. With a slight abuse of notation, we write $C(\hat{y})=C$.
-
-\subsection{Backpropagation Algorithm}
 The general idea of training is to calculate the activations throughout the network until the output is calculated. Then calculate the cost function, and using a gradient descent algorithm trying to minimize the cost function by use of the chain rule. This procedure is referred to as the back propagation algorithm. Since the input of the model is given, we want to change the weights and biases to minimize the cost function. We update the weights and biases in the following way
 
 \begin{align*}
@@ -116,8 +91,6 @@ which is the product of the error term for neuron $j$ in layer $i$ and the activ
 
 With the groundwork above, we are ready to consider the backpropagation algorithm. It consists of a forward phase, where one computes the activation for every neuron in each layer by feeding the NN and a backward phase, where one calculates the error estimates. 
 
-\newpage
-
 Once both phases are complete, we have the necessary information to calculate the change in the weights. 
 
 \begin{align*}
@@ -138,62 +111,58 @@ For the remaining errors, the chain rule gives
     \label{eq:delta_rest}
 \end{align}
 
-Thus we can consider the backpropagation algorithm:
+1. For a set of $X_{n,d_{(0)}}$ and $Y_{n,d_{(L)}}$.
 
-\textbf{Backpropagation}
-\begin{enumerate}
-    \item For a set of $X_{n,d_{(0)}}$ and $Y_{n,d_{(L)}}$.
-    \item Specify the step length, $\eta$, activation function $f$, and a stopping criteria.
-    \item Assign each weight $w_{i,j}^{(i)}$ a real value (this is often done with a small random value).
-    \item While stopping criteria not met
-    \begin{itemize}
-        \item For $s$ in $1:n$
-        \begin{itemize}
-            \item Calculate $z_{k}^{(i)}$ using \eqref{eq:z} and $a_{k}^{(i)}$ by \eqref{eq:activation_function} for $i$ in $1:L$ and $k$ in $1:d_{(i)}$.
-            \itemsep0.3em
-            \item Calculate $\delta_{j}^{(i)}$ by applying \eqref{eq:delta_last} and \eqref{eq:delta_rest}, for $i$ in $L:1$ and $j$ in $1:d_{(i)}$.
-        \end{itemize}
-        \itemsep0.1em
-        \item Update $w_{j,k}^{(i)} \leftarrow w_{j,k}^{(i)} - \eta \frac{1}{2n} \sum_{s=1}^n \delta_{j}^{(i)}a_k^{(i-1)}$ for $i$ in $1:L$ and $k$ in $1:d_{(i)}$ and $j$ in $0:d_{(i-1)}$.
-    \end{itemize}
-\end{enumerate}
+1. Specify the step length, $\eta$, activation function $f$, and a stopping criteria.
+
+1. Assign each weight $w_{i,j}^{(i)}$ a real value (this is often done with a small random value).
+
+1. While stopping criteria not met
+
+    + For $s$ in $1:n$  
+    + Calculate $z_{k}^{(i)}$ and $a_{k}^{(i)}$ for $i$ in $1:L$ and $k$ in $1:d_{(i)}$.
+    + Calculate $\delta_{j}^{(i)}$ for $i$ in $L:1$ and $j$ in $1:d_{(i)}$.
+    + Update $w_{j,k}^{(i)} \leftarrow w_{j,k}^{(i)} - \eta \frac{1}{2n} \sum_{s=1}^n                                  \delta_{j}^{(i)}a_k^{(i-1)}$ for $i$ in $1:L$ and $k$ in $1:d_{(i)}$ and $j$ in $0:d_{(i-1)}$.
 
 In the backpropagation algorithm the criteria $||\partial C / \partial w_{j,k}^{(i)}|| < \epsilon$ for each $j,k,i$, is often used, where $\epsilon$ is a small real number.
 
+## Practical implementation
+
+Learning the Black \& Scholes price map
+
+\begin{align}\label{eq:BlackScholesFormel}
+    F(t,S_t) &= S_t\Psi(d_2)-\mathrm{e}^{-r(T-t)}K\Psi(d_1),\quad 0\leq t \leq T, \\
+    d_1 :&= \frac{\log(\frac{S_t}{K})+(r-\frac{\sigma^2}{2})(T-t)}{\sigma\sqrt{T-t}}, \nonumber \\
+    d_2 :&= d_1 + \sigma\sqrt{T-t}, \nonumber
+\end{align}
+
 ```{r}
-d1 <- function(x,k,r,sivma,T_,t){
-  (log(x/k)+(r-sivma^2/2)*(T_-t))/(sivma*sqrt(T_-t))
-}
+suppressMessages(library(tidyverse))
+suppressMessages(library(neuralnet))
+suppressMessages(library(sigmoid))
+Data <- read_csv("ActualBlackScholesPrices.csv") %>% suppressMessages()
+head(Data) # A view of the data
 
-d2 <- function(x,k,r,sivma,T_,t){
-  d1(x,k,r,sivma,T_,t) + sivma*sqrt(T_-t)
-}
+#Random sampling into test and train set
 
-price_bs_fixed <- function(data){
-  1*pnorm(d2(1,data[,1],0.2,data[,2],data[,3],0))-
-    exp(-0.2*(data[,3]-0))*data[,1]*
-    pnorm(d1(1,data[,1],0.2,data[,2],data[,3],0))
-}
+set.seed(69)
+index <- sample(1:nrow(Data),round(0.75*nrow(Data)))
+train <- Data[index,]
+test <- Data[-index,]
 
-grid <- expand.grid(K = seq(from = 0.5, to = 2, by = 0.1),
-                    sivma = seq(from = 0.1, to = 1, by = 0.1),
-                    T_ = seq(from = 0.02, to = 1, by = 0.02))
 
-black_scoles_actual <- tibble(price = price_bs_fixed(grid), grid)
-JJB_black_scholes <- round(black_scoles_actual,3)
+nn <- neuralnet(Price ~ ., data = train,  linear.output = TRUE, hidden = c(10))
 
-index <- sample(1:nrow(JJB_black_scholes),round(0.75*nrow(JJB_black_scholes)))
+plot(nn, rep = "best") 
 
-sample_75 <- JJB_black_scholes[index,]
-sample_25 <- JJB_black_scholes[-index,]
+(test$Price - compute(nn, test[,-1])$net.result %>% as.numeric) %>% mean %>% round(5)
 
-nn <- neuralnet(price ~ K + sivma + T_, data = sample_75,
-                hidden=c(3,2),act.fct = "logistic", linear.output = TRUE)
-plot(nn, rep= "best")
+set.seed(6969)
+nn <- neuralnet(Price ~ ., data = train, linear.output = TRUE, hidden = c(10),
+                act.fct = relu)
 
-predict_25 <- predict(nn,newdata = sample_25[,-1])
+plot(nn, rep = "best") 
 
-mean((predict_25-sample_25$price)^2)
-
+(test$Price - compute(nn, test[,-1])$net.result %>% as.numeric) %>% mean %>% round(5)
 ```
 
