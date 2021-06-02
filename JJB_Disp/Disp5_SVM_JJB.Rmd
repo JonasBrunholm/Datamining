@@ -5,6 +5,9 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
 ```
 
 ### Optimal Separation Hyperplanes
@@ -14,6 +17,22 @@ The general idea is to separate classes using hyperplanes. Recall that a hyperpl
 \begin{align}
     \beta_0 +\beta_1 x_1 + \cdots + \beta_px_p = 0.
 \end{align}
+
+```{r}
+set.seed(69)
+dot1 <- data.frame(x = rnorm(50,0,1), y= runif(50,0,1))
+
+dot2 <- data.frame(x = rnorm(50,2,1), y= runif(50,1,2))
+
+ggplot(data = dot1, aes(x=x,y=y)) +
+    geom_point(colour = "blue") +
+    geom_point(data = dot2, aes(x=x,y=y),colour = "red") +
+    geom_abline(intercept = 1.2,slope = -0.15) + 
+    geom_abline(intercept = 1.27,slope = -0.15,linetype = "dashed")+
+    geom_abline(intercept = 1.11,slope = -0.15,linetype = "dashed")
+
+```
+
 
 For convenience i will only consider two clases where $y_i \in \{-1,1\}$. We are interest in $\beta_0,\ldots,\beta_p$ such that when we are on one side of the hyperplane all observations are equal to $1$ and on the other side $-1$.
 
@@ -160,7 +179,27 @@ where $\alpha$ is Lagrange multipliers, plus restrictions involving the slack va
 
 The idea is to use nonlinear transformations of the explanatory variables, to improve the accuracy of the classification. Of course we will remain linear in the transformed variables.
 
-**PLOT**
+```{r}
+
+xx <- data.frame(x = rnorm(50,0,1), y= rep(0,50))
+
+xx_20 <- xx %>% filter(x>-0.5) %>% filter(x<0.5)
+xx_small <- xx %>% filter(x< -0.5)
+xx_bigg <- xx %>% filter(0.5 < x)
+xx_80 <- rbind(xx_small,xx_bigg)
+
+plot1 <- ggplot(data = xx_80, aes(x=x,y=y)) +
+    geom_point(colour = "blue") +
+    geom_point(data = xx_20, aes(x=x,y=y),colour = "red")
+
+plot2 <- ggplot(data = xx_80, aes(x=x,y=x^(2))) +
+    geom_point(colour = "blue") +
+    geom_point(data = xx_20, aes(x=x,y=x^(2)),colour = "red")
+
+grid.arrange(plot1,plot2,ncol=2)
+
+```
+
 
 There are many non-linear transformations that could be done to the explanatory variables e.g. $x_i^2, x_jx_i^2, x_j^2x_i$, however we use a trick related to the Lagrange condition we saw before.
 

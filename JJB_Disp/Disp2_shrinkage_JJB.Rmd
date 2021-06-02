@@ -98,8 +98,6 @@ or alternatively
 
 * The value of the tuning parameter is chosen by cross-validation with values in a grid.
 
-* **Maybe show the scaled vs unscaled in a plot**
-
 ### Lasso
 
 \begin{align*}
